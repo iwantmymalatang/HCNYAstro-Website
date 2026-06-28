@@ -1,0 +1,31 @@
+{{ define "body" }}
+    <body class="{{ if .Site.Params.backgroundImage }} background-image" style="background-image: url('{{ .Site.Params.backgroundImage }}');" {{ else }}"{{ end }}>
+{{ end }}
+
+{{ define "main" }}
+    <div class="content-center">
+        <main>
+            <div>
+                {{ if .Site.Params.Portrait.Path }}
+                <img src="{{ .Site.Params.Portrait.Path }}" class="circle" alt="{{ .Site.Params.Portrait.Alt }}" style="max-width:{{ .Site.Params.Portrait.MaxWidth }}" />
+                {{ end }}
+
+                {{ with .Title }}
+                    <h1>{{ . }}</h1>
+                {{ end }}
+
+                {{ .Content }}
+
+                <nav style="margin-top: 2rem; display: inline-flex; gap: 1rem; align-items: center; justify-content: center;">
+                    <a href="{{ "repository/" | relURL }}" style="text-decoration: underline;">Astronomy Olympiad Handouts</a>
+                </nav>
+
+                {{- with .Site.Params.social }}
+                    <div>
+                        {{ partial "social-icons.html" . }}
+                    </div>
+                {{- end }}
+            </div>
+        </main>
+    </div>
+{{ end }}

@@ -1,0 +1,32 @@
+baseURL = "http://localhost:1313/"
+languageCode = "en-us"
+title = "HCNY Astronomy"
+theme = "hello-friend-ng"
+
+[pagination]
+  pagerSize = 10
+
+[params]
+  description = "HCNY Astronomy homepage"
+  keywords = "astronomy, olympiad, handouts"
+  defaultTheme = "dark"
+
+[menu]
+
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 1
+
+  [[menu.main]]
+    identifier = "posts"
+    name = "Posts"
+    url = "/posts/"
+    weight = 2
+
+  [[menu.main]]
+    identifier = "repository"
+    name = "Repository"
+    url = "/repository/"
+    weight = 3

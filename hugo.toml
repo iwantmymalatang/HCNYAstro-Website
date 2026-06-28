@@ -1,4 +1,4 @@
-baseURL = "http://localhost:1313/"
+baseURL = "https://iwantmymalatang.github.io/HCNYAstro-Website/"
 languageCode = "en-us"
 title = "HCNY Astronomy"
 theme = "hello-friend-ng"

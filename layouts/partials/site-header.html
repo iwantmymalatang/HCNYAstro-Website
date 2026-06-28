@@ -1,13 +1,16 @@
 <header class="site-header">
     <div class="shell header-inner">
-        <a class="brand" href="{{ .Site.Home.RelPermalink }}" aria-label="HCNY Astronomy home">
-            <span class="brand-text">HCNY Astronomy</span>
-        </a>
-        <nav class="nav" aria-label="Main navigation">
-            {{ range sort .Site.Menus.main "Weight" }}
-                <a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
-            {{ end }}
-            <a class="login-link" href="{{ .Site.Params.githubRepo }}/new/main/content/posts?filename=new-post.md" target="_blank" rel="noopener">Login key</a>
-        </nav>
+        <div class="top-pill">
+            <a class="brand" href="{{ .Site.Home.RelPermalink }}" aria-label="HCNY Astronomy home">
+                <span class="brand-text">HCNY Astronomy</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                {{ range sort .Site.Menus.main "Weight" }}
+                    {{ $menuURL := .URL | relLangURL }}
+                    <a href="{{ $menuURL }}"{{ if or ($.IsMenuCurrent "main" .) (eq $.RelPermalink $menuURL) }} aria-current="page"{{ end }}>{{ .Name }}</a>
+                {{ end }}
+                <a class="login-link" href="{{ .Site.Params.githubRepo }}/new/main/content/posts?filename=new-post.md" target="_blank" rel="noopener">Login key</a>
+            </nav>
+        </div>
     </div>
 </header>

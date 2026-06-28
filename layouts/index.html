@@ -1,5 +1,6 @@
 {{ define "main" }}
 <section class="hero">
+    <canvas id="orbit-canvas" class="hero-orbit" width="900" height="640" aria-label="Interactive three-body problem simulation"></canvas>
     <div class="shell hero-grid">
         <div class="hero-copy">
             <h1>{{ .Title }}</h1>
@@ -8,14 +9,6 @@
                 <a href="{{ "repository/" | relURL }}">Astronomy Olympiad Handouts</a>
             </div>
         </div>
-        <section class="orbit-panel" aria-label="Interactive three-body problem simulation">
-            <div class="orbit-toolbar">
-                <span>Three-body problem</span>
-                <button id="orbit-toggle" type="button">Pause</button>
-            </div>
-            <canvas id="orbit-canvas" width="560" height="420"></canvas>
-            <p class="orbit-caption">A minimalist figure-eight solution: three equal masses chasing the same gravitational path.</p>
-        </section>
     </div>
 </section>
 

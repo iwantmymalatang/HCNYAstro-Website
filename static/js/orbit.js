@@ -1,10 +1,8 @@
 (() => {
     const canvas = document.getElementById("orbit-canvas");
-    const toggle = document.getElementById("orbit-toggle");
-    if (!canvas || !toggle) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    let running = true;
     let phase = 0;
     let scaleTilt = 1;
 
@@ -54,9 +52,6 @@
         const radius = Math.min(width, height) * 0.44;
 
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = "#04050c";
-        ctx.fillRect(0, 0, width, height);
-
         for (let i = 0; i < 64; i += 1) {
             const x = (i * 73 + 11) % width;
             const y = (i * 41 + 29) % height;
@@ -87,15 +82,7 @@
             drawBody(cx + p.x, cy + p.y * scaleTilt, 5.5, body.color, body.label);
         });
 
-        ctx.fillStyle = "rgba(11, 13, 24, 0.72)";
-        ctx.fillRect(16, height - 78, Math.min(370, width - 32), 56);
-        ctx.fillStyle = "#d8d9ff";
-        ctx.font = "12px Inter, system-ui, sans-serif";
-        ctx.fillText("Figure-eight three-body choreography", 28, height - 52);
-        ctx.fillStyle = "#9498b5";
-        ctx.fillText("Idealized equal masses; interactive vertical scale.", 28, height - 32);
-
-        if (running) phase += 0.012;
+        phase += 0.012;
         requestAnimationFrame(draw);
     }
 
@@ -103,11 +90,6 @@
         const rect = canvas.getBoundingClientRect();
         const y = (event.clientY - rect.top) / rect.height;
         scaleTilt = 0.55 + y * 0.7;
-    });
-
-    toggle.addEventListener("click", () => {
-        running = !running;
-        toggle.textContent = running ? "Pause" : "Play";
     });
 
     resize();

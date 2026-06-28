@@ -1,0 +1,13 @@
+<header class="site-header">
+    <div class="shell header-inner">
+        <a class="brand" href="{{ .Site.Home.RelPermalink }}" aria-label="HCNY Astronomy home">
+            <span class="brand-mark">HCNY</span>
+            <span class="brand-text">Astronomy</span>
+        </a>
+        <nav class="nav" aria-label="Main navigation">
+            {{ range sort .Site.Menus.main "Weight" }}
+                <a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+            {{ end }}
+        </nav>
+    </div>
+</header>

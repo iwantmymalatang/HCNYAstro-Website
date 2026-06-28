@@ -1,0 +1,25 @@
+{{ define "main" }}
+<section class="shell page-head">
+    <p class="eyebrow">Archive</p>
+    <h1>{{ .Title }}</h1>
+    {{ with .Content }}<div class="page-summary">{{ . }}</div>{{ end }}
+    {{ if eq .Section "posts" }}
+        <a class="owner-action" href="{{ .Site.Params.githubRepo }}/new/main/content/posts?filename=new-post.md" target="_blank" rel="noopener">Add a post on GitHub</a>
+    {{ end }}
+</section>
+
+<section class="shell archive-list">
+    {{ range .Paginator.Pages }}
+        <article class="archive-item">
+            <div>
+                <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
+                <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+                {{ with .Summary }}<p>{{ . | plainify }}</p>{{ end }}
+            </div>
+            <a class="read-link" href="{{ .RelPermalink }}">Read</a>
+        </article>
+    {{ else }}
+        <p>No entries yet.</p>
+    {{ end }}
+</section>
+{{ end }}

@@ -1,31 +1,59 @@
-{{ define "body" }}
-    <body class="{{ if .Site.Params.backgroundImage }} background-image" style="background-image: url('{{ .Site.Params.backgroundImage }}');" {{ else }}"{{ end }}>
+{{ define "main" }}
+<section class="hero">
+    <div class="shell hero-grid">
+        <div class="hero-copy">
+            <p class="eyebrow">HCNYAstro archive</p>
+            <h1>{{ .Title }}</h1>
+            <p class="lede">{{ .Site.Params.tagline }}</p>
+            <div class="quick-access" aria-label="Quick access">
+                <span>Quick access</span>
+                <a href="{{ "repository/" | relURL }}">Astronomy Olympiad Handouts</a>
+            </div>
+            <dl class="archive-stats">
+                <div>
+                    <dt>{{ len (where .Site.RegularPages "Section" "posts") }}</dt>
+                    <dd>posts</dd>
+                </div>
+                <div>
+                    <dt>1</dt>
+                    <dd>repository</dd>
+                </div>
+                <div>
+                    <dt>2026</dt>
+                    <dd>season</dd>
+                </div>
+            </dl>
+        </div>
+        <section class="orbit-panel" aria-label="Interactive astronomy element">
+            <div class="orbit-toolbar">
+                <span>Interactive sky model</span>
+                <button id="orbit-toggle" type="button">Pause</button>
+            </div>
+            <canvas id="orbit-canvas" width="560" height="420"></canvas>
+            <p class="orbit-caption">Move your pointer across the panel to tilt the orbital plane.</p>
+        </section>
+    </div>
+</section>
+
+<section class="shell section-grid">
+    <a class="feature-link" href="{{ "repository/" | relURL }}">
+        <span class="label">Repository</span>
+        <strong>Astronomy Olympiad Handouts</strong>
+        <span>Training material, explanations, and practice links.</span>
+    </a>
+    <a class="feature-link" href="{{ "posts/" | relURL }}">
+        <span class="label">Posts</span>
+        <strong>Updates and notes</strong>
+        <span>Announcements and writeups are editable as Markdown files.</span>
+    </a>
+    <a class="feature-link" href="{{ "about/" | relURL }}">
+        <span class="label">About</span>
+        <strong>Interest group</strong>
+        <span>HCNYAstro at Hwa Chong and Nanyang Girls' High.</span>
+    </a>
+</section>
 {{ end }}
 
-{{ define "main" }}
-    <div class="content-center">
-        <main>
-            <div>
-                {{ if .Site.Params.Portrait.Path }}
-                <img src="{{ .Site.Params.Portrait.Path }}" class="circle" alt="{{ .Site.Params.Portrait.Alt }}" style="max-width:{{ .Site.Params.Portrait.MaxWidth }}" />
-                {{ end }}
-
-                {{ with .Title }}
-                    <h1>{{ . }}</h1>
-                {{ end }}
-
-                {{ .Content }}
-
-                <nav style="margin-top: 2rem; display: inline-flex; gap: 1rem; align-items: center; justify-content: center;">
-                    <a href="{{ "repository/" | relURL }}" style="text-decoration: underline;">Astronomy Olympiad Handouts</a>
-                </nav>
-
-                {{- with .Site.Params.social }}
-                    <div>
-                        {{ partial "social-icons.html" . }}
-                    </div>
-                {{- end }}
-            </div>
-        </main>
-    </div>
+{{ define "scripts" }}
+<script src="{{ "js/orbit.js" | relURL }}"></script>
 {{ end }}

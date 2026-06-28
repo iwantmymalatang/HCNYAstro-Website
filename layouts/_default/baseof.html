@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="{{ .Site.Language.Lang | default "en" }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
+    <meta name="keywords" content="{{ .Site.Params.keywords }}">
+    <meta name="theme-color" content="#070a12">
+    <link rel="canonical" href="{{ .Permalink }}">
+    <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+    <link rel="stylesheet" href="{{ "css/hcny.css" | relURL }}">
+</head>
+<body>
+    {{ partial "site-header.html" . }}
+    <main>
+        {{ block "main" . }}{{ end }}
+    </main>
+    <footer class="site-footer">
+        <div class="shell footer-inner">
+            <span>HCNY Astronomy</span>
+            <span>Built with Hugo.</span>
+        </div>
+    </footer>
+    {{ block "scripts" . }}{{ end }}
+</body>
+</html>

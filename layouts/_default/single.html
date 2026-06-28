@@ -1,0 +1,16 @@
+{{ define "main" }}
+<article class="shell single">
+    <header class="single-head">
+        <p class="eyebrow">{{ .Section | default "Page" }}</p>
+        <h1>{{ .Title }}</h1>
+        {{ if not .Date.IsZero }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 Jan 2006" }}</time>{{ end }}
+    </header>
+    <div class="single-content">
+        {{ .Content }}
+    </div>
+    {{ if eq .Section "posts" }}
+        {{ $filePath := replace .File.Path "\\" "/" }}
+        <a class="owner-action" href="{{ .Site.Params.githubRepo }}/edit/main/content/{{ $filePath }}" target="_blank" rel="noopener">Edit this post on GitHub</a>
+    {{ end }}
+</article>
+{{ end }}

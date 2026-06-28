@@ -10,6 +10,8 @@ theme = "hello-friend-ng"
   description = "HCNY Astronomy homepage"
   keywords = "astronomy, olympiad, handouts"
   defaultTheme = "dark"
+  githubRepo = "https://github.com/iwantmymalatang/HCNYAstro-Website"
+  tagline = "Astronomy olympiad notes, handouts, and updates for HCNYAstro."
 
 [menu]
 

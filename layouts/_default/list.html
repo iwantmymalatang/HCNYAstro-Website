@@ -1,16 +1,19 @@
 {{ define "main" }}
 <section class="shell page-head">
-    <p class="eyebrow">Archive</p>
+    <p class="eyebrow">{{ if eq .Section "posts" }}Posts{{ else }}Section{{ end }}</p>
     <h1>{{ .Title }}</h1>
     {{ with .Content }}<div class="page-summary">{{ . }}</div>{{ end }}
     {{ if eq .Section "posts" }}
-        <a class="owner-action" href="{{ .Site.Params.githubRepo }}/new/main/content/posts?filename=new-post.md" target="_blank" rel="noopener">Add a post on GitHub</a>
+        <div class="owner-actions">
+            <a class="owner-action primary" href="{{ .Site.Params.githubRepo }}/new/main/content/posts?filename=new-post.md" target="_blank" rel="noopener">Log in to add a post</a>
+            <span>Only approved GitHub collaborators can publish changes.</span>
+        </div>
     {{ end }}
 </section>
 
-<section class="shell archive-list">
+<section class="shell post-list">
     {{ range .Paginator.Pages }}
-        <article class="archive-item">
+        <article class="post-card">
             <div>
                 <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
                 <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>

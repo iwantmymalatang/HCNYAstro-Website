@@ -2,14 +2,14 @@
 <section class="hero">
     <div class="shell hero-grid">
         <div class="hero-copy">
-            <p class="eyebrow">HCNYAstro archive</p>
+            <p class="eyebrow">HCNYAstro hub</p>
             <h1>{{ .Title }}</h1>
             <p class="lede">{{ .Site.Params.tagline }}</p>
             <div class="quick-access" aria-label="Quick access">
                 <span>Quick access</span>
                 <a href="{{ "repository/" | relURL }}">Astronomy Olympiad Handouts</a>
             </div>
-            <dl class="archive-stats">
+            <dl class="site-stats">
                 <div>
                     <dt>{{ len (where .Site.RegularPages "Section" "posts") }}</dt>
                     <dd>posts</dd>
@@ -43,8 +43,8 @@
     </a>
     <a class="feature-link" href="{{ "posts/" | relURL }}">
         <span class="label">Posts</span>
-        <strong>Updates and notes</strong>
-        <span>Announcements and writeups are editable as Markdown files.</span>
+                <strong>Updates and notes</strong>
+                <span>Approved contributors can log in with GitHub to add and edit posts.</span>
     </a>
     <a class="feature-link" href="{{ "about/" | relURL }}">
         <span class="label">About</span>

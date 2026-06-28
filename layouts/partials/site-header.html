@@ -8,6 +8,7 @@
             {{ range sort .Site.Menus.main "Weight" }}
                 <a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
             {{ end }}
+            <a class="login-link" href="{{ .Site.Params.githubRepo }}/new/main/content/posts?filename=new-post.md" target="_blank" rel="noopener">Log in</a>
         </nav>
     </div>
 </header>

@@ -6,6 +6,8 @@ Hugo site for HCNYAstro.
 
 Posts live in `content/posts/` as Markdown files.
 
+Approved contributors can use the website's "Log in to add a post" link. It opens GitHub's editor; GitHub handles login and only collaborators with access to this repository can commit changes.
+
 To add a post locally:
 
 ```powershell

@@ -6,14 +6,7 @@
     const ctx = canvas.getContext("2d");
     let running = true;
     let phase = 0;
-    let tilt = 0.58;
-
-    const facts = [
-        "Alpha Centauri A: Sun-like G-type star",
-        "Alpha Centauri B: cooler K-type companion",
-        "Proxima Centauri: faint red dwarf, nearest star to the Sun",
-        "AB orbit: about 80 years; Proxima distance is compressed here",
-    ];
+    let scaleTilt = 1;
 
     function resize() {
         const box = canvas.getBoundingClientRect();
@@ -23,92 +16,93 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    function text(label, x, y, color = "#c9c7ff") {
-        ctx.fillStyle = color;
-        ctx.font = "12px Inter, system-ui, sans-serif";
-        ctx.fillText(label, x, y);
+    function lemniscate(t, radius) {
+        const s = Math.sin(t);
+        const c = Math.cos(t);
+        const denom = 1 + s * s;
+        return {
+            x: (radius * c) / denom,
+            y: (radius * s * c) / denom,
+        };
     }
 
-    function glow(x, y, radius, core, halo) {
-        const gradient = ctx.createRadialGradient(x, y, 1, x, y, radius);
-        gradient.addColorStop(0, core);
-        gradient.addColorStop(0.42, core);
-        gradient.addColorStop(1, halo);
-        ctx.fillStyle = gradient;
+    function drawBody(x, y, radius, color, label) {
+        const glow = ctx.createRadialGradient(x, y, 1, x, y, radius * 4.5);
+        glow.addColorStop(0, color);
+        glow.addColorStop(0.34, color);
+        glow.addColorStop(1, "rgba(120, 90, 255, 0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.fillStyle = "#e9e7ff";
+        ctx.font = "12px Inter, system-ui, sans-serif";
+        ctx.fillText(label, x + 12, y - 10);
     }
 
     function draw() {
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
-        const cx = width * 0.47;
-        const cy = height * 0.49;
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.min(width, height) * 0.44;
+
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = "#04050c";
         ctx.fillRect(0, 0, width, height);
 
-        for (let i = 0; i < 54; i += 1) {
-            const x = (i * 89 + 31) % width;
-            const y = (i * 47 + 19) % height;
-            const alpha = 0.24 + 0.26 * Math.sin(phase * 0.7 + i);
-            ctx.fillStyle = `rgba(218, 219, 255, ${alpha})`;
+        for (let i = 0; i < 64; i += 1) {
+            const x = (i * 73 + 11) % width;
+            const y = (i * 41 + 29) % height;
+            ctx.fillStyle = `rgba(215, 216, 255, ${0.18 + 0.18 * Math.sin(phase + i)})`;
             ctx.fillRect(x, y, 1, 1);
         }
 
-        const abRadius = Math.min(width, height) * 0.18;
-        ctx.strokeStyle = "rgba(143, 140, 255, 0.45)";
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(143, 140, 255, 0.42)";
+        ctx.lineWidth = 1.2;
         ctx.beginPath();
-        ctx.ellipse(cx, cy, abRadius, abRadius * tilt, 0, 0, Math.PI * 2);
+        for (let i = 0; i <= 360; i += 1) {
+            const point = lemniscate((i / 360) * Math.PI * 2, radius);
+            const x = cx + point.x;
+            const y = cy + point.y * scaleTilt;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
         ctx.stroke();
 
-        const angle = phase;
-        const ax = cx + Math.cos(angle) * abRadius * 0.52;
-        const ay = cy + Math.sin(angle) * abRadius * tilt * 0.52;
-        const bx = cx - Math.cos(angle) * abRadius * 0.48;
-        const by = cy - Math.sin(angle) * abRadius * tilt * 0.48;
+        const bodies = [
+            { offset: 0, color: "#ffffff", label: "m1" },
+            { offset: (Math.PI * 2) / 3, color: "#a58bff", label: "m2" },
+            { offset: (Math.PI * 4) / 3, color: "#6f7dff", label: "m3" },
+        ];
 
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
-        ctx.beginPath();
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(bx, by);
-        ctx.stroke();
-
-        glow(ax, ay, 22, "#ffffff", "rgba(143, 140, 255, 0)");
-        glow(bx, by, 17, "#d8d2ff", "rgba(98, 76, 180, 0)");
-
-        text("A", ax + 15, ay - 14, "#ffffff");
-        text("B", bx + 13, by - 12, "#d8d2ff");
-
-        const proximaAngle = -0.8 + Math.sin(phase * 0.18) * 0.12;
-        const proximaRadius = Math.min(width, height) * 0.43;
-        const px = cx + Math.cos(proximaAngle) * proximaRadius;
-        const py = cy + Math.sin(proximaAngle) * proximaRadius * 0.72;
-
-        ctx.strokeStyle = "rgba(112, 92, 210, 0.24)";
-        ctx.setLineDash([4, 8]);
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, proximaRadius, proximaRadius * 0.72, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        glow(px, py, 10, "#a58bff", "rgba(165, 139, 255, 0)");
-        text("Proxima", px + 12, py + 4, "#a58bff");
+        bodies.forEach((body) => {
+            const p = lemniscate(phase + body.offset, radius);
+            drawBody(cx + p.x, cy + p.y * scaleTilt, 5.5, body.color, body.label);
+        });
 
         ctx.fillStyle = "rgba(11, 13, 24, 0.72)";
-        ctx.fillRect(16, height - 98, Math.min(390, width - 32), 76);
-        facts.forEach((fact, i) => text(fact, 28, height - 74 + i * 17, i === 3 ? "#8f93ad" : "#d8d9ff"));
+        ctx.fillRect(16, height - 78, Math.min(370, width - 32), 56);
+        ctx.fillStyle = "#d8d9ff";
+        ctx.font = "12px Inter, system-ui, sans-serif";
+        ctx.fillText("Figure-eight three-body choreography", 28, height - 52);
+        ctx.fillStyle = "#9498b5";
+        ctx.fillText("Idealized equal masses; interactive vertical scale.", 28, height - 32);
 
-        if (running) phase += 0.015;
+        if (running) phase += 0.012;
         requestAnimationFrame(draw);
     }
 
     canvas.addEventListener("pointermove", (event) => {
         const rect = canvas.getBoundingClientRect();
         const y = (event.clientY - rect.top) / rect.height;
-        tilt = 0.38 + y * 0.36;
+        scaleTilt = 0.55 + y * 0.7;
     });
 
     toggle.addEventListener("click", () => {

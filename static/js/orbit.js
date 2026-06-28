@@ -27,12 +27,12 @@
         const cx = width / 2;
         const cy = height / 2;
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = "#080d19";
+        ctx.fillStyle = "#060607";
         ctx.fillRect(0, 0, width, height);
 
         stars.forEach((star) => {
             ctx.globalAlpha = 0.35 + 0.35 * Math.sin(phase + star.x);
-            ctx.fillStyle = "#ddecff";
+            ctx.fillStyle = "#f4f4f4";
             ctx.beginPath();
             ctx.arc(star.x % width, star.y % height, star.r, 0, Math.PI * 2);
             ctx.fill();
@@ -42,7 +42,7 @@
         const orbitCount = 4;
         for (let i = 0; i < orbitCount; i += 1) {
             const radius = 56 + i * 42;
-            ctx.strokeStyle = i === 2 ? "rgba(114, 217, 255, 0.55)" : "rgba(157, 173, 199, 0.32)";
+            ctx.strokeStyle = i === 2 ? "rgba(255, 255, 255, 0.62)" : "rgba(170, 173, 180, 0.30)";
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.ellipse(cx, cy, radius, radius * (0.46 + tilt), 0, 0, Math.PI * 2);
@@ -51,16 +51,16 @@
             const angle = phase * (0.55 + i * 0.12) + i * 1.35;
             const px = cx + Math.cos(angle) * radius;
             const py = cy + Math.sin(angle) * radius * (0.46 + tilt);
-            ctx.fillStyle = i === 2 ? "#72d9ff" : "#f0c36a";
+            ctx.fillStyle = i === 2 ? "#ffffff" : "#b8bbc2";
             ctx.beginPath();
             ctx.arc(px, py, i === 2 ? 5 : 3.6, 0, Math.PI * 2);
             ctx.fill();
         }
 
         const sun = ctx.createRadialGradient(cx, cy, 2, cx, cy, 34);
-        sun.addColorStop(0, "#fff4b0");
-        sun.addColorStop(0.55, "#f0c36a");
-        sun.addColorStop(1, "rgba(240, 195, 106, 0)");
+        sun.addColorStop(0, "#ffffff");
+        sun.addColorStop(0.55, "#d7d9de");
+        sun.addColorStop(1, "rgba(215, 217, 222, 0)");
         ctx.fillStyle = sun;
         ctx.beginPath();
         ctx.arc(cx, cy, 34, 0, Math.PI * 2);

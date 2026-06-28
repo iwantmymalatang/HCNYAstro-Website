@@ -2,27 +2,11 @@
 <section class="hero">
     <div class="shell hero-grid">
         <div class="hero-copy">
-            <p class="eyebrow">HCNYAstro hub</p>
             <h1>{{ .Title }}</h1>
             <p class="lede">{{ .Site.Params.tagline }}</p>
             <div class="quick-access" aria-label="Quick access">
-                <span>Quick access</span>
                 <a href="{{ "repository/" | relURL }}">Astronomy Olympiad Handouts</a>
             </div>
-            <dl class="site-stats">
-                <div>
-                    <dt>{{ len (where .Site.RegularPages "Section" "posts") }}</dt>
-                    <dd>posts</dd>
-                </div>
-                <div>
-                    <dt>1</dt>
-                    <dd>repository</dd>
-                </div>
-                <div>
-                    <dt>2026</dt>
-                    <dd>season</dd>
-                </div>
-            </dl>
         </div>
         <section class="orbit-panel" aria-label="Interactive Alpha Centauri model">
             <div class="orbit-toolbar">

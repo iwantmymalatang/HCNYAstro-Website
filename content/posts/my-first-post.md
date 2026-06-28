@@ -1,11 +1,9 @@
 +++
-title = "My First Post"
+title = "Collaboration with Raffles Institution Science and Astronomy Club"
 date = 2026-06-28
 draft = false
 +++
 
 
 
-This is my first blog post.
-
-Hugo turns this Markdown file into a webpage.
+Details

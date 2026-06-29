@@ -1,0 +1,60 @@
+name: Regenerate static files
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "content/**"
+      - "layouts/**"
+      - "static/**"
+      - "hugo.toml"
+      - ".github/workflows/regenerate-static.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regenerate-static
+  cancel-in-progress: true
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    env:
+      HUGO_VERSION: 0.163.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Hugo
+        run: |
+          wget -O "${RUNNER_TEMP}/hugo.deb" "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
+          sudo dpkg -i "${RUNNER_TEMP}/hugo.deb"
+
+      - name: Build generated root files
+        run: |
+          rm -rf branch-site
+          hugo --gc --minify --destination branch-site
+          for item in about admin categories css images js posts repository tags 404.html index.html index.xml sitemap.xml .nojekyll; do
+            rm -rf "$item"
+            cp -R "branch-site/$item" "$item"
+          done
+          rm -rf branch-site
+
+      - name: Commit generated files
+        run: |
+          if git diff --quiet; then
+            echo "No generated changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add about admin categories css images js posts repository tags 404.html index.html index.xml sitemap.xml .nojekyll
+          git commit -m "Regenerate static site"
+          git push

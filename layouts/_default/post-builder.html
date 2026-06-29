@@ -34,6 +34,36 @@
             <span>Body</span>
             <textarea id="post-body" name="body" rows="12" placeholder="Write the post here. Markdown works."></textarea>
         </label>
+
+        <div class="image-helper">
+            <div class="image-helper-head">
+                <span>Image</span>
+                <a id="open-image-upload" href="{{ .Site.Params.githubRepo }}/upload/main/static/images/posts" target="_blank" rel="noopener">Upload image</a>
+            </div>
+            <label>
+                <span>Choose image</span>
+                <input id="post-image-file" name="image" type="file" accept="image/*">
+            </label>
+            <div class="form-grid">
+                <label>
+                    <span>Image filename</span>
+                    <input id="post-image-name" name="imageName" type="text" placeholder="observation-night.jpg" autocomplete="off">
+                </label>
+                <label>
+                    <span>Alt text</span>
+                    <input id="post-image-alt" name="imageAlt" type="text" placeholder="Students observing the night sky" autocomplete="off">
+                </label>
+            </div>
+            <div class="image-preview-wrap" id="image-preview-wrap" hidden>
+                <img id="image-preview" alt="">
+            </div>
+            <div class="builder-actions image-actions">
+                <button type="button" id="insert-image-markdown">Insert image</button>
+                <button type="button" id="copy-image-markdown">Copy image Markdown</button>
+                <button type="button" id="download-image-file">Download renamed image</button>
+            </div>
+            <code id="image-markdown">![Image description](/HCNYAstro-Website/images/posts/image-name.jpg)</code>
+        </div>
     </form>
 
     <aside class="post-output" aria-live="polite">
@@ -46,6 +76,7 @@
             <button type="button" id="copy-markdown">Copy Markdown</button>
             <button type="button" id="download-markdown">Download .md</button>
             <a id="open-github-post" href="{{ .Site.Params.githubRepo }}/new/main/content/posts" target="_blank" rel="noopener">Open GitHub</a>
+            <a id="open-actions" href="{{ .Site.Params.githubRepo }}/actions" target="_blank" rel="noopener">Check deploy</a>
         </div>
         <p class="builder-status" id="builder-status"></p>
     </aside>

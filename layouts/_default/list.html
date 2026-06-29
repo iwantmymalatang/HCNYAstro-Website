@@ -1,6 +1,6 @@
 {{ define "main" }}
 <section class="shell page-head">
-    <p class="eyebrow">{{ if eq .Section "posts" }}Posts{{ else }}Section{{ end }}</p>
+    <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     {{ with .Content }}<div class="page-summary">{{ . }}</div>{{ end }}
     {{ if eq .Section "posts" }}

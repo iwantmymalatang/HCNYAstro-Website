@@ -10,6 +10,8 @@ title = 'Repository'
 
 **Handouts**
 
+To be added soon
+
 [Handout explanation videos](https://www.aoguide.app/) are December 2026 training resources prepared for HCNY Astronomy members.
 
 **Lesson slides and materials**
@@ -19,7 +21,7 @@ Open the [lesson slides and materials](https://drive.google.com/drive/folders/11
 - [HCNYAstro Session 1](https://docs.google.com/presentation/d/1e_t3ULCi6ijZcE73-1k4_UN_SuuyT6LzJFOwCDd2g6w/edit?usp=drive_web)
 - [HCNYAstro Session 2](https://docs.google.com/presentation/d/1EQnfo_FA1UNS9HjMl3rysR4F2O2CLL7aeagkw5tSFJk/edit?usp=drive_web)
 - [COM Session 1: Centre of Mass](https://docs.google.com/presentation/d/1-H0OFl6gO9_XGZTgzlqLa2xzynD_i77Za2AZCmOXi8A/edit?usp=drive_web)
-- [HCNY Session 4?](https://docs.google.com/presentation/d/1a6HJCLElkrimyBBRKaw137ZyUyIcqiqjYCs63K6pugY/edit?usp=drive_web)
+- [HCNY Session 4](https://docs.google.com/presentation/d/1a6HJCLElkrimyBBRKaw137ZyUyIcqiqjYCs63K6pugY/edit?usp=drive_web)
 - [HCNY Session 4 Final Version](https://docs.google.com/presentation/d/1quKnZl74dr9tznAyepwtp6qVe0Wy4-aqSFX4Tebm7vU/edit?usp=drive_web)
 - [Prerequisite Mechanics for HCNY Astro](https://docs.google.com/presentation/d/1xRxJJrZyTPVHY0u0ooZTqfCkak07_Gh5x09r2G0KVdc/edit?usp=drive_web)
 - [Prerequisite Mechanics (Simplified)](https://docs.google.com/presentation/d/1LuJcgeLFQJcY9OkRdGHtIA0fzLMhQrjopXqw_j6xmOY/edit?usp=drive_web)

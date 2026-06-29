@@ -1,0 +1,57 @@
+{{ define "main" }}
+<section class="shell page-head admin-head">
+    <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
+    <h1>{{ .Title }}</h1>
+    <div class="page-summary">
+        <p>Create a ready-to-paste Hugo post file for HCNY Astronomy.</p>
+    </div>
+</section>
+
+<section class="shell admin-builder" data-repo="{{ .Site.Params.githubRepo }}">
+    <form class="post-form" id="post-builder-form">
+        <label>
+            <span>Title</span>
+            <input id="post-title" name="title" type="text" placeholder="Results for AstroChallenge 2025" autocomplete="off" required>
+        </label>
+
+        <div class="form-grid">
+            <label>
+                <span>Date</span>
+                <input id="post-date" name="date" type="date" required>
+            </label>
+            <label>
+                <span>Author</span>
+                <input id="post-author" name="author" type="text" placeholder="HCNY Astronomy" autocomplete="off">
+            </label>
+        </div>
+
+        <label>
+            <span>Summary</span>
+            <input id="post-summary" name="summary" type="text" placeholder="Short description for the posts page" autocomplete="off">
+        </label>
+
+        <label>
+            <span>Body</span>
+            <textarea id="post-body" name="body" rows="12" placeholder="Write the post here. Markdown works."></textarea>
+        </label>
+    </form>
+
+    <aside class="post-output" aria-live="polite">
+        <div class="output-meta">
+            <span>File</span>
+            <strong id="post-filename">content/posts/new-post.md</strong>
+        </div>
+        <textarea id="post-markdown" rows="16" spellcheck="false"></textarea>
+        <div class="builder-actions">
+            <button type="button" id="copy-markdown">Copy Markdown</button>
+            <button type="button" id="download-markdown">Download .md</button>
+            <a id="open-github-post" href="{{ .Site.Params.githubRepo }}/new/main/content/posts" target="_blank" rel="noopener">Open GitHub</a>
+        </div>
+        <p class="builder-status" id="builder-status"></p>
+    </aside>
+</section>
+{{ end }}
+
+{{ define "scripts" }}
+    <script src="{{ "js/post-builder.js" | relURL }}?v={{ now.Unix }}" defer></script>
+{{ end }}

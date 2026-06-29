@@ -1,7 +1,7 @@
 {{ define "main" }}
 <article class="shell single">
     <header class="single-head">
-        <p class="eyebrow">Post</p>
+        <a class="back-link" href="{{ "posts/" | relURL }}">← Back</a>
         <h1>{{ .Title }}</h1>
         {{ if not .Date.IsZero }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 Jan 2006" }}</time>{{ end }}
     </header>

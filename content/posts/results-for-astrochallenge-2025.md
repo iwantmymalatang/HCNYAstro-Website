@@ -6,13 +6,13 @@ draft = false
 
 
 
-Context
+*Context*
 
 
 Astrochallenge is an astronomy competition jointly organised by the astronomical societies of NUS and NTU. It aims to enhance students’ interest and knowledge in astronomy, and hopes to foster closer inter-school ties through the common interest of astronomy. Students will be exposed to a comprehensive array of questions that range from theoretical to practical astronomy. The competition consists of several rounds for Junior Category: Individual round, Team round, and Project round.
 
 
-Experience
+*Experience*
 
 
 In June 2025, a team consisting of 4 HCNY Astro members - Ngiam Hui En, Emma Zhang, Alyssa Tay, and Ng Chyng Yi participated in Astrochallenge. We were awarded Outstanding Project (Silver) and placed third overall.

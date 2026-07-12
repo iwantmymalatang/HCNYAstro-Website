@@ -688,31 +688,6 @@ h1 {
     max-width: 820px;
 }
 
-.setup-notice {
-    display: grid;
-    gap: 10px;
-    max-width: 820px;
-    padding: 22px;
-    border: 1px solid rgba(143, 140, 255, 0.28);
-    border-radius: 18px;
-    background: rgba(3, 4, 10, 0.28);
-}
-
-.setup-notice strong {
-    color: #ffffff;
-    font-size: 1.15rem;
-}
-
-.setup-notice p {
-    margin: 0;
-    color: var(--muted);
-    line-height: 1.7;
-}
-
-.setup-notice code {
-    color: #ffffff;
-}
-
 .dynamic-posts {
     display: grid;
     gap: 14px;

@@ -142,31 +142,69 @@ async function initDynamicPosts() {
     `;
 }
 
-async function initDynamicAdmin() {
-    const mount = document.getElementById("dynamic-admin");
+async function initDynamicLogin() {
+    const mount = document.getElementById("dynamic-login");
     if (!mount) return;
 
     const config = getConfig(mount);
     const client = getClient(config);
-    const setupNotice = document.getElementById("dynamic-setup-notice");
     const loginForm = document.getElementById("dynamic-login-form");
-    const postForm = document.getElementById("dynamic-post-form");
     const loginStatus = document.getElementById("login-status");
-    const postStatus = document.getElementById("dynamic-post-status");
-    const imageInput = document.getElementById("dynamic-image");
-    const imagePreview = document.getElementById("dynamic-image-preview");
-    const imagePreviewWrap = document.getElementById("dynamic-image-preview-wrap");
+    const editorUrl = mount.dataset.editorUrl || "../post-admin/";
 
     if (!client) {
-        setupNotice.hidden = false;
-        loginForm.hidden = true;
+        loginStatus.textContent = "Login is not connected yet.";
         return;
     }
 
-    async function refreshAuth() {
+    const { data } = await client.auth.getSession();
+    if (data.session) {
+        window.location.href = editorUrl;
+        return;
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        loginStatus.textContent = "Logging in...";
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+        const { error } = await client.auth.signInWithPassword({ email, password });
+        if (error) {
+            loginStatus.textContent = error.message;
+            return;
+        }
+        window.location.href = editorUrl;
+    });
+}
+
+async function initDynamicEditor() {
+    const mount = document.getElementById("dynamic-editor");
+    if (!mount) return;
+
+    const config = getConfig(mount);
+    const client = getClient(config);
+    const postForm = document.getElementById("dynamic-post-form");
+    const postStatus = document.getElementById("dynamic-post-status");
+    const editorStatus = document.getElementById("editor-status");
+    const imageInput = document.getElementById("dynamic-image");
+    const imagePreview = document.getElementById("dynamic-image-preview");
+    const imagePreviewWrap = document.getElementById("dynamic-image-preview-wrap");
+    const loginUrl = mount.dataset.loginUrl || "../admin/";
+
+    if (!client) {
+        editorStatus.textContent = "Post editor is not connected yet.";
+        return;
+    }
+
+    async function requireAuth() {
         const { data } = await client.auth.getSession();
-        loginForm.hidden = !!data.session;
-        postForm.hidden = !data.session;
+        if (!data.session) {
+            window.location.href = loginUrl;
+            return false;
+        }
+        editorStatus.hidden = true;
+        postForm.hidden = false;
+        return true;
     }
 
     imageInput.addEventListener("change", () => {
@@ -180,19 +218,9 @@ async function initDynamicAdmin() {
         imagePreviewWrap.hidden = false;
     });
 
-    loginForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        loginStatus.textContent = "Logging in...";
-        const email = document.getElementById("login-email").value.trim();
-        const password = document.getElementById("login-password").value;
-        const { error } = await client.auth.signInWithPassword({ email, password });
-        loginStatus.textContent = error ? error.message : "";
-        if (!error) await refreshAuth();
-    });
-
     document.getElementById("logout-button").addEventListener("click", async () => {
         await client.auth.signOut();
-        await refreshAuth();
+        window.location.href = loginUrl;
     });
 
     postForm.addEventListener("submit", async (event) => {
@@ -241,8 +269,9 @@ async function initDynamicAdmin() {
         postStatus.innerHTML = `Published. <a href="../posts/?post=${encodeURIComponent(slug)}">Open post</a>`;
     });
 
-    await refreshAuth();
+    await requireAuth();
 }
 
 await initDynamicPosts();
-await initDynamicAdmin();
+await initDynamicLogin();
+await initDynamicEditor();

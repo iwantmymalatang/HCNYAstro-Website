@@ -1,43 +1,23 @@
 {{ define "main" }}
 <section class="shell page-head admin-head">
-    <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
+    <a class="back-link" href="{{ "admin/" | relURL }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Log in to add dynamic posts and images directly from the website.</p>
+        <p>Create a post directly on the website.</p>
     </div>
 </section>
 
 <section
     class="shell dynamic-admin"
-    id="dynamic-admin"
+    id="dynamic-editor"
     data-supabase-url="{{ .Site.Params.supabaseUrl }}"
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
     data-storage-bucket="{{ .Site.Params.supabaseStorageBucket }}"
-    data-site-base="{{ .Site.BaseURL }}"
+    data-login-url="{{ "admin/" | relURL }}"
 >
-    <div class="setup-notice" id="dynamic-setup-notice" hidden>
-        <strong>Dynamic posting is not configured yet.</strong>
-        <p>Add your Supabase URL and anon key in <code>hugo.toml</code>, then create the database tables using <code>supabase-schema.sql</code>.</p>
-    </div>
-
-    <form class="post-form auth-panel" id="dynamic-login-form">
-        <label>
-            <span>Email</span>
-            <input id="login-email" type="email" autocomplete="email" placeholder="approved@example.com" required>
-        </label>
-        <label>
-            <span>Password</span>
-            <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" required>
-        </label>
-        <div class="builder-actions">
-            <button type="submit">Log in</button>
-        </div>
-        <p class="builder-status" id="login-status"></p>
-    </form>
-
     <form class="post-form dynamic-post-form" id="dynamic-post-form" hidden>
         <div class="image-helper-head">
-            <span>New post</span>
+            <span>Post editor</span>
             <button type="button" id="logout-button">Log out</button>
         </div>
 
@@ -90,6 +70,7 @@
         </div>
         <p class="builder-status" id="dynamic-post-status"></p>
     </form>
+    <p class="builder-status" id="editor-status">Checking login...</p>
 </section>
 {{ end }}
 

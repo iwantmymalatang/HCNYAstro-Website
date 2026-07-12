@@ -1,0 +1,36 @@
+{{ define "main" }}
+<section class="shell page-head admin-head">
+    <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
+    <h1>{{ .Title }}</h1>
+    <div class="page-summary">
+        <p>Approved members can log in to manage website posts.</p>
+    </div>
+</section>
+
+<section
+    class="shell dynamic-admin"
+    id="dynamic-login"
+    data-supabase-url="{{ .Site.Params.supabaseUrl }}"
+    data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
+    data-editor-url="{{ "post-admin/" | relURL }}"
+>
+    <form class="post-form auth-panel" id="dynamic-login-form">
+        <label>
+            <span>Email</span>
+            <input id="login-email" type="email" autocomplete="email" placeholder="approved@example.com" required>
+        </label>
+        <label>
+            <span>Password</span>
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" required>
+        </label>
+        <div class="builder-actions">
+            <button type="submit">Log in</button>
+        </div>
+        <p class="builder-status" id="login-status"></p>
+    </form>
+</section>
+{{ end }}
+
+{{ define "scripts" }}
+    <script type="module" src="{{ "js/dynamic-posts.js" | relURL }}?v={{ now.Unix }}"></script>
+{{ end }}

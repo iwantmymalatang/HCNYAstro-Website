@@ -1,6 +1,5 @@
 +++
-title = "Post Builder"
-layout = "post-builder"
+title = "Admin Login"
+layout = "admin-login"
 draft = false
 +++
-

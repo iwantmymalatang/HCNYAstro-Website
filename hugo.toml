@@ -12,6 +12,9 @@ theme = "hello-friend-ng"
   defaultTheme = "dark"
   githubRepo = "https://github.com/iwantmymalatang/HCNYAstro-Website"
   tagline = "Astronomy olympiad notes, handouts, and updates for HCNYAstro."
+  supabaseUrl = ""
+  supabaseAnonKey = ""
+  supabaseStorageBucket = "post-images"
 
 [menu]
 

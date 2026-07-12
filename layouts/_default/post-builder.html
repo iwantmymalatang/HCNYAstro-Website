@@ -3,86 +3,96 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Create a ready-to-paste Hugo post file for HCNY Astronomy.</p>
+        <p>Log in to add dynamic posts and images directly from the website.</p>
     </div>
 </section>
 
-<section class="shell admin-builder" data-repo="{{ .Site.Params.githubRepo }}">
-    <form class="post-form" id="post-builder-form">
+<section
+    class="shell dynamic-admin"
+    id="dynamic-admin"
+    data-supabase-url="{{ .Site.Params.supabaseUrl }}"
+    data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
+    data-storage-bucket="{{ .Site.Params.supabaseStorageBucket }}"
+    data-site-base="{{ .Site.BaseURL }}"
+>
+    <div class="setup-notice" id="dynamic-setup-notice" hidden>
+        <strong>Dynamic posting is not configured yet.</strong>
+        <p>Add your Supabase URL and anon key in <code>hugo.toml</code>, then create the database tables using <code>supabase-schema.sql</code>.</p>
+    </div>
+
+    <form class="post-form auth-panel" id="dynamic-login-form">
+        <label>
+            <span>Email</span>
+            <input id="login-email" type="email" autocomplete="email" placeholder="approved@example.com" required>
+        </label>
+        <label>
+            <span>Password</span>
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" required>
+        </label>
+        <div class="builder-actions">
+            <button type="submit">Log in</button>
+        </div>
+        <p class="builder-status" id="login-status"></p>
+    </form>
+
+    <form class="post-form dynamic-post-form" id="dynamic-post-form" hidden>
+        <div class="image-helper-head">
+            <span>New post</span>
+            <button type="button" id="logout-button">Log out</button>
+        </div>
+
         <label>
             <span>Title</span>
-            <input id="post-title" name="title" type="text" placeholder="Results for AstroChallenge 2025" autocomplete="off" required>
+            <input id="dynamic-title" type="text" placeholder="Observation Night Recap" autocomplete="off" required>
         </label>
 
         <div class="form-grid">
             <label>
-                <span>Date</span>
-                <input id="post-date" name="date" type="date" required>
+                <span>Author</span>
+                <input id="dynamic-author" type="text" placeholder="HCNY Astronomy" autocomplete="off">
             </label>
             <label>
-                <span>Author</span>
-                <input id="post-author" name="author" type="text" placeholder="HCNY Astronomy" autocomplete="off">
+                <span>Publish</span>
+                <select id="dynamic-published">
+                    <option value="true">Published</option>
+                    <option value="false">Draft</option>
+                </select>
             </label>
         </div>
 
         <label>
             <span>Summary</span>
-            <input id="post-summary" name="summary" type="text" placeholder="Short description for the posts page" autocomplete="off">
+            <input id="dynamic-summary" type="text" placeholder="Short description for the posts page" autocomplete="off">
         </label>
 
         <label>
             <span>Body</span>
-            <textarea id="post-body" name="body" rows="12" placeholder="Write the post here. Markdown works."></textarea>
+            <textarea id="dynamic-body" rows="14" placeholder="Write the post here. Markdown-style paragraphs, links, and images work." required></textarea>
         </label>
 
         <div class="image-helper">
-            <div class="image-helper-head">
-                <span>Image</span>
-                <a id="open-image-upload" href="{{ .Site.Params.githubRepo }}/upload/main/static/images/posts" target="_blank" rel="noopener">Upload image</a>
-            </div>
             <label>
-                <span>Choose image</span>
-                <input id="post-image-file" name="image" type="file" accept="image/*">
+                <span>Picture</span>
+                <input id="dynamic-image" type="file" accept="image/*">
             </label>
-            <div class="form-grid">
-                <label>
-                    <span>Image filename</span>
-                    <input id="post-image-name" name="imageName" type="text" placeholder="observation-night.jpg" autocomplete="off">
-                </label>
-                <label>
-                    <span>Alt text</span>
-                    <input id="post-image-alt" name="imageAlt" type="text" placeholder="Students observing the night sky" autocomplete="off">
-                </label>
+            <label>
+                <span>Picture alt text</span>
+                <input id="dynamic-image-alt" type="text" placeholder="Students observing the night sky" autocomplete="off">
+            </label>
+            <div class="image-preview-wrap" id="dynamic-image-preview-wrap" hidden>
+                <img id="dynamic-image-preview" alt="">
             </div>
-            <div class="image-preview-wrap" id="image-preview-wrap" hidden>
-                <img id="image-preview" alt="">
-            </div>
-            <div class="builder-actions image-actions">
-                <button type="button" id="insert-image-markdown">Insert image</button>
-                <button type="button" id="copy-image-markdown">Copy image Markdown</button>
-                <button type="button" id="download-image-file">Download renamed image</button>
-            </div>
-            <code id="image-markdown">![Image description](/HCNYAstro-Website/images/posts/image-name.jpg)</code>
         </div>
-    </form>
 
-    <aside class="post-output" aria-live="polite">
-        <div class="output-meta">
-            <span>File</span>
-            <strong id="post-filename">content/posts/new-post.md</strong>
-        </div>
-        <textarea id="post-markdown" rows="16" spellcheck="false"></textarea>
         <div class="builder-actions">
-            <button type="button" id="copy-markdown">Copy Markdown</button>
-            <button type="button" id="download-markdown">Download .md</button>
-            <a id="open-github-post" href="{{ .Site.Params.githubRepo }}/new/main/content/posts" target="_blank" rel="noopener">Open GitHub</a>
-            <a id="open-actions" href="{{ .Site.Params.githubRepo }}/actions" target="_blank" rel="noopener">Check deploy</a>
+            <button type="submit">Publish post</button>
+            <a href="{{ "posts/" | relURL }}">View posts</a>
         </div>
-        <p class="builder-status" id="builder-status"></p>
-    </aside>
+        <p class="builder-status" id="dynamic-post-status"></p>
+    </form>
 </section>
 {{ end }}
 
 {{ define "scripts" }}
-    <script src="{{ "js/post-builder.js" | relURL }}?v={{ now.Unix }}" defer></script>
+    <script type="module" src="{{ "js/dynamic-posts.js" | relURL }}?v={{ now.Unix }}"></script>
 {{ end }}

@@ -24,4 +24,19 @@
         <p>No entries yet.</p>
     {{ end }}
 </section>
+{{ if eq .Section "posts" }}
+<section
+    class="shell dynamic-posts"
+    id="dynamic-posts"
+    data-supabase-url="{{ .Site.Params.supabaseUrl }}"
+    data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
+    data-site-base="{{ .Site.BaseURL }}"
+></section>
+{{ end }}
+{{ end }}
+
+{{ define "scripts" }}
+    {{ if eq .Section "posts" }}
+        <script type="module" src="{{ "js/dynamic-posts.js" | relURL }}?v={{ now.Unix }}"></script>
+    {{ end }}
 {{ end }}

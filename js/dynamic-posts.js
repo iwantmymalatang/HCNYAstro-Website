@@ -74,12 +74,32 @@ function formatDate(value) {
     }).format(date).replace(/\//g, ".");
 }
 
+function dynamicCard(post) {
+    const card = document.createElement("article");
+    card.className = "post-card dynamic-post-card";
+    card.dataset.dynamicSlug = post.slug;
+    card.dataset.timestamp = new Date(post.created_at).getTime() || 0;
+    card.innerHTML = `
+        <div>
+            <time>${formatDate(post.created_at)}</time>
+            <h2><a href="?post=${encodeURIComponent(post.slug)}">${escapeHtml(post.title)}</a></h2>
+            ${post.summary ? `<p>${escapeHtml(post.summary)}</p>` : ""}
+        </div>
+        <a class="read-link" href="?post=${encodeURIComponent(post.slug)}">Read</a>
+    `;
+    return card;
+}
+
 async function initDynamicPosts() {
     const mount = document.getElementById("dynamic-posts");
     if (!mount) return;
 
     const client = getClient(getConfig(mount));
-    if (!client) return;
+    const list = document.getElementById("post-list");
+    if (!client) {
+        list?.classList.remove("is-loading-dynamic");
+        return;
+    }
 
     const selectedSlug = new URLSearchParams(window.location.search).get("post");
     if (selectedSlug) {
@@ -122,30 +142,20 @@ async function initDynamicPosts() {
         .order("created_at", { ascending: false });
 
     if (error) {
+        list?.classList.remove("is-loading-dynamic");
         mount.className = "shell";
         mount.innerHTML = '<p class="builder-status">Posts could not load.</p>';
         return;
     }
-    if (!data?.length) return;
-
-    const list = document.getElementById("post-list");
+    if (!data?.length) {
+        list?.classList.remove("is-loading-dynamic");
+        return;
+    }
     if (!list) return;
 
-    const dynamicCards = data.map((post) => {
-        const card = document.createElement("article");
-        card.className = "post-card dynamic-post-card";
-        card.innerHTML = `
-            <div>
-                <time>${formatDate(post.created_at)}</time>
-                <h2><a href="?post=${encodeURIComponent(post.slug)}">${escapeHtml(post.title)}</a></h2>
-                ${post.summary ? `<p>${escapeHtml(post.summary)}</p>` : ""}
-            </div>
-            <a class="read-link" href="?post=${encodeURIComponent(post.slug)}">Read</a>
-        `;
-        return card;
-    });
-
-    list.prepend(...dynamicCards);
+    list.querySelectorAll(".dynamic-post-card").forEach((card) => card.remove());
+    list.prepend(...data.map(dynamicCard));
+    list.classList.remove("is-loading-dynamic");
 }
 
 async function initDynamicLogin() {
@@ -195,6 +205,12 @@ async function initDynamicEditor() {
     const imageInput = document.getElementById("dynamic-image");
     const imagePreview = document.getElementById("dynamic-image-preview");
     const imagePreviewWrap = document.getElementById("dynamic-image-preview-wrap");
+    const manager = document.getElementById("admin-post-manager");
+    const postList = document.getElementById("admin-post-list");
+    const refreshButton = document.getElementById("refresh-posts-button");
+    const clearButton = document.getElementById("clear-editor-button");
+    const saveButton = document.getElementById("save-post-button");
+    const modeLabel = document.getElementById("editor-mode-label");
     const loginUrl = mount.dataset.loginUrl || "../admin/";
 
     if (!client) {
@@ -210,7 +226,91 @@ async function initDynamicEditor() {
         }
         editorStatus.hidden = true;
         postForm.hidden = false;
+        manager.hidden = false;
+        await loadAdminPosts();
         return true;
+    }
+
+    function resetEditor() {
+        postForm.reset();
+        document.getElementById("dynamic-edit-id").value = "";
+        document.getElementById("dynamic-current-slug").value = "";
+        imagePreviewWrap.hidden = true;
+        modeLabel.textContent = "New post";
+        saveButton.textContent = "Publish post";
+        postStatus.textContent = "";
+    }
+
+    function fillEditor(post) {
+        document.getElementById("dynamic-edit-id").value = post.id;
+        document.getElementById("dynamic-current-slug").value = post.slug;
+        document.getElementById("dynamic-title").value = post.title || "";
+        document.getElementById("dynamic-author").value = post.author || "HCNY Astronomy";
+        document.getElementById("dynamic-summary").value = post.summary || "";
+        document.getElementById("dynamic-body").value = post.body || "";
+        document.getElementById("dynamic-image-alt").value = post.image_alt || "";
+        document.getElementById("dynamic-published").value = post.published ? "true" : "false";
+        imageInput.value = "";
+        if (post.image_url) {
+            imagePreview.src = post.image_url;
+            imagePreview.alt = post.image_alt || post.title || "Post image";
+            imagePreviewWrap.hidden = false;
+        } else {
+            imagePreviewWrap.hidden = true;
+        }
+        modeLabel.textContent = "Editing post";
+        saveButton.textContent = "Save changes";
+        postStatus.textContent = "Editing existing post.";
+        postForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function loadAdminPosts() {
+        postList.innerHTML = '<p class="builder-status">Loading posts...</p>';
+        const { data, error } = await client
+            .from("posts")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            postList.innerHTML = `<p class="builder-status">${escapeHtml(error.message)}</p>`;
+            return;
+        }
+
+        if (!data?.length) {
+            postList.innerHTML = '<p class="builder-status">No dynamic posts yet.</p>';
+            return;
+        }
+
+        postList.innerHTML = "";
+        data.forEach((post) => {
+            const item = document.createElement("article");
+            item.className = "admin-post-item";
+            item.innerHTML = `
+                <div>
+                    <time>${formatDate(post.created_at)}</time>
+                    <strong>${escapeHtml(post.title)}</strong>
+                    <span>${post.published ? "Published" : "Draft"}</span>
+                </div>
+                <div class="admin-post-actions">
+                    <button type="button" data-action="edit">Edit</button>
+                    <button type="button" data-action="delete">Delete</button>
+                </div>
+            `;
+            item.querySelector('[data-action="edit"]').addEventListener("click", () => fillEditor(post));
+            item.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+                const confirmed = window.confirm(`Delete "${post.title}"?`);
+                if (!confirmed) return;
+                const result = await client.from("posts").delete().eq("id", post.id);
+                if (result.error) {
+                    postStatus.textContent = result.error.message;
+                    return;
+                }
+                if (document.getElementById("dynamic-edit-id").value === post.id) resetEditor();
+                await loadAdminPosts();
+                postStatus.textContent = "Post deleted.";
+            });
+            postList.append(item);
+        });
     }
 
     imageInput.addEventListener("change", () => {
@@ -228,6 +328,8 @@ async function initDynamicEditor() {
         await client.auth.signOut();
         window.location.href = loginUrl;
     });
+    refreshButton.addEventListener("click", loadAdminPosts);
+    clearButton.addEventListener("click", resetEditor);
 
     postForm.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -236,6 +338,7 @@ async function initDynamicEditor() {
         const title = document.getElementById("dynamic-title").value.trim();
         const body = document.getElementById("dynamic-body").value.trim();
         const slug = slugify(title);
+        const editId = document.getElementById("dynamic-edit-id").value;
         const file = imageInput.files?.[0];
         let imageUrl = "";
 
@@ -254,25 +357,30 @@ async function initDynamicEditor() {
             imageUrl = client.storage.from(config.bucket).getPublicUrl(imagePath).data.publicUrl;
         }
 
-        const { error } = await client.from("posts").insert({
+        const payload = {
             title,
             slug,
             author: document.getElementById("dynamic-author").value.trim() || "HCNY Astronomy",
             summary: document.getElementById("dynamic-summary").value.trim(),
             body,
-            image_url: imageUrl,
             image_alt: document.getElementById("dynamic-image-alt").value.trim(),
             published: document.getElementById("dynamic-published").value === "true",
-        });
+            updated_at: new Date().toISOString(),
+        };
+        if (imageUrl) payload.image_url = imageUrl;
 
+        const result = editId
+            ? await client.from("posts").update(payload).eq("id", editId)
+            : await client.from("posts").insert({ ...payload, image_url: imageUrl });
+        const { error } = result;
         if (error) {
             postStatus.textContent = error.message;
             return;
         }
 
-        postForm.reset();
-        imagePreviewWrap.hidden = true;
-        postStatus.innerHTML = `Published. <a href="../posts/?post=${encodeURIComponent(slug)}">Open post</a>`;
+        resetEditor();
+        await loadAdminPosts();
+        postStatus.innerHTML = `Saved. <a href="../posts/?post=${encodeURIComponent(slug)}">Open post</a>`;
     });
 
     await requireAuth();

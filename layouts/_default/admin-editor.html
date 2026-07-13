@@ -17,9 +17,11 @@
 >
     <form class="post-form dynamic-post-form" id="dynamic-post-form" hidden>
         <div class="image-helper-head">
-            <span>Post editor</span>
+            <span id="editor-mode-label">New post</span>
             <button type="button" id="logout-button">Log out</button>
         </div>
+        <input id="dynamic-edit-id" type="hidden">
+        <input id="dynamic-current-slug" type="hidden">
 
         <label>
             <span>Title</span>
@@ -65,12 +67,21 @@
         </div>
 
         <div class="builder-actions">
-            <button type="submit">Publish post</button>
+            <button type="submit" id="save-post-button">Publish post</button>
+            <button type="button" id="clear-editor-button">New blank post</button>
             <a href="{{ "posts/" | relURL }}">View posts</a>
         </div>
         <p class="builder-status" id="dynamic-post-status"></p>
     </form>
     <p class="builder-status" id="editor-status">Checking login...</p>
+
+    <section class="admin-post-manager" id="admin-post-manager" hidden>
+        <div class="image-helper-head">
+            <span>Existing dynamic posts</span>
+            <button type="button" id="refresh-posts-button">Refresh</button>
+        </div>
+        <div class="admin-post-list" id="admin-post-list"></div>
+    </section>
 </section>
 {{ end }}
 

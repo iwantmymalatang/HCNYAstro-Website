@@ -188,13 +188,13 @@ async function initDynamicPosts() {
     list.classList.remove("is-loading-dynamic");
 }
 
-async function initViewerSubscribe() {
-    const mount = document.getElementById("viewer-subscribe");
+async function initMemberSubscribe() {
+    const mount = document.getElementById("member-subscribe");
     if (!mount) return;
 
     const client = getClient(getConfig(mount));
-    const form = document.getElementById("viewer-subscribe-form");
-    const status = document.getElementById("viewer-subscribe-status");
+    const form = document.getElementById("member-subscribe-form");
+    const status = document.getElementById("member-subscribe-status");
     const params = new URLSearchParams(window.location.search);
     const unsubscribeToken = params.get("unsubscribe");
 
@@ -205,16 +205,16 @@ async function initViewerSubscribe() {
 
     if (unsubscribeToken) {
         status.textContent = "Unsubscribing...";
-        const { error } = await client.rpc("unsubscribe_viewer", { input_token: unsubscribeToken });
+        const { error } = await client.rpc("unsubscribe_member", { input_token: unsubscribeToken });
         status.textContent = error ? error.message : "You are unsubscribed.";
     }
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const email = document.getElementById("viewer-email").value.trim().toLowerCase();
+        const email = document.getElementById("member-email").value.trim().toLowerCase();
         if (!email) return;
         status.textContent = "Subscribing...";
-        const { error } = await client.rpc("subscribe_viewer", { input_email: email });
+        const { error } = await client.rpc("subscribe_member", { input_email: email });
         if (error) {
             status.textContent = error.message;
             return;
@@ -239,14 +239,14 @@ async function initDynamicLogin() {
     const modeDetails = {
         signin: {
             title: "Sign in",
-            copy: "Use your viewer or contributor account.",
+            copy: "Use your member or contributor account.",
             submit: "Sign in",
             autocomplete: "current-password",
         },
         signup: {
             title: "Sign up",
-            copy: "New accounts start as viewers. The site owner must approve contributor or admin access.",
-            submit: "Create viewer account",
+            copy: "New accounts start as members. The site owner must approve contributor or admin access.",
+            submit: "Create member account",
             autocomplete: "new-password",
         },
         admin: {
@@ -305,7 +305,7 @@ async function initDynamicLogin() {
         }
 
         if (mode === "signup") {
-            loginStatus.textContent = "Viewer account created. Ask the owner if you need contributor access.";
+            loginStatus.textContent = "Member account created. Ask the owner if you need contributor access.";
             return;
         }
         window.location.href = editorUrl;
@@ -352,7 +352,7 @@ async function initDynamicEditor() {
             .eq("id", data.session.user.id)
             .single();
         if (error || !["contributor", "admin"].includes(profile?.role)) {
-            editorStatus.innerHTML = "This login is a viewer account. Ask the owner to make it a contributor before editing posts.";
+            editorStatus.innerHTML = "This login is a member account. Ask the owner to make it a contributor before editing posts.";
             const logout = document.createElement("button");
             logout.type = "button";
             logout.textContent = "Log out";
@@ -560,6 +560,6 @@ async function initDynamicEditor() {
 }
 
 await initDynamicPosts();
-await initViewerSubscribe();
+await initMemberSubscribe();
 await initDynamicLogin();
 await initDynamicEditor();

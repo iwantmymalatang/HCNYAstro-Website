@@ -27,19 +27,19 @@
 {{ if eq .Section "posts" }}
 <section
     class="shell subscribe-panel"
-    id="viewer-subscribe"
+    id="member-subscribe"
     data-supabase-url="{{ .Site.Params.supabaseUrl }}"
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
 >
     <div>
-        <span class="label">Viewer updates</span>
+        <span class="label">Member updates</span>
         <h2>Get new posts by email</h2>
     </div>
-    <form id="viewer-subscribe-form">
-        <input id="viewer-email" type="email" autocomplete="email" placeholder="email@example.com" required>
+    <form id="member-subscribe-form">
+        <input id="member-email" type="email" autocomplete="email" placeholder="email@example.com" required>
         <button type="submit">Subscribe</button>
     </form>
-    <p class="builder-status" id="viewer-subscribe-status"></p>
+    <p class="builder-status" id="member-subscribe-status"></p>
 </section>
 <div
     id="dynamic-posts"

@@ -3,10 +3,15 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
-  role text not null default 'viewer' check (role in ('viewer', 'contributor', 'admin')),
+  role text not null default 'member' check (role in ('member', 'contributor', 'admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles drop constraint if exists profiles_role_check;
+update public.profiles set role = 'member' where role = 'viewer';
+alter table public.profiles alter column role set default 'member';
+alter table public.profiles add constraint profiles_role_check check (role in ('member', 'contributor', 'admin'));
 
 create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
@@ -73,7 +78,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (id, email, role)
-  values (new.id, new.email, 'viewer')
+  values (new.id, new.email, 'member')
   on conflict (id) do update
   set email = excluded.email,
       updated_at = now();
@@ -87,13 +92,15 @@ after insert on auth.users
 for each row execute function public.handle_new_user();
 
 insert into public.profiles (id, email, role)
-select id, email, 'viewer'
+select id, email, 'member'
 from auth.users
 on conflict (id) do update
 set email = excluded.email,
     updated_at = now();
 
-create or replace function public.subscribe_viewer(input_email text)
+update public.profiles set role = 'member' where role = 'viewer';
+
+create or replace function public.subscribe_member(input_email text)
 returns void
 language plpgsql
 security definer
@@ -115,7 +122,7 @@ begin
 end;
 $$;
 
-create or replace function public.unsubscribe_viewer(input_token uuid)
+create or replace function public.unsubscribe_member(input_token uuid)
 returns void
 language plpgsql
 security definer
@@ -130,6 +137,26 @@ begin
 end;
 $$;
 
+create or replace function public.subscribe_viewer(input_email text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  select public.subscribe_member(input_email);
+$$;
+
+create or replace function public.unsubscribe_viewer(input_token uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  select public.unsubscribe_member(input_token);
+$$;
+
+grant execute on function public.subscribe_member(text) to anon, authenticated;
+grant execute on function public.unsubscribe_member(uuid) to anon, authenticated;
 grant execute on function public.subscribe_viewer(text) to anon, authenticated;
 grant execute on function public.unsubscribe_viewer(uuid) to anon, authenticated;
 

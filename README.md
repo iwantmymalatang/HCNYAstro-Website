@@ -4,8 +4,8 @@ Hugo site for HCNYAstro with Supabase-powered dynamic posts.
 
 ## Roles
 
-- Viewers can subscribe to post email notifications from the Posts page.
-- New Supabase Auth accounts start as `viewer`.
+- Members can subscribe to post email notifications from the Posts page.
+- New Supabase Auth accounts start as `member`.
 - Contributors can log in at `/admin/` and create, edit, publish, draft, delete, and upload images for posts.
 - Admins have contributor permissions and can be used as owner accounts.
 

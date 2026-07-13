@@ -1,6 +1,6 @@
 # HCNY Astronomy Website
 
-Hugo site for HCNYAstro with Supabase-powered dynamic posts.
+Hugo site for HCNYAstro with Supabase-powered posts.
 
 ## Roles
 
@@ -27,7 +27,7 @@ where email = 'owner@example.com';
 
 ## Notifications
 
-The Edge Function at `supabase/functions/notify-new-post/index.ts` runs after a contributor publishes a new dynamic post.
+The Edge Function at `supabase/functions/notify-new-post/index.ts` runs after a contributor publishes a new post.
 
 Set these Supabase Edge Function secrets to enable email:
 
@@ -55,6 +55,6 @@ hugo server -D
 
 Static Markdown posts can still live in `content/posts/`, but normal posting should happen through the website admin editor.
 
-The two original Markdown posts are also seeded into Supabase by `supabase-schema.sql`. After rerunning the SQL, they appear in the post editor and can be edited or deleted like other dynamic posts. The static Markdown versions stay as a fallback, and the website hides duplicate static cards when the dynamic versions load.
+The two original Markdown posts are also seeded into Supabase by `supabase-schema.sql`. After rerunning the SQL, they appear in the post editor and can be edited or deleted like other posts. The static Markdown versions stay as a fallback, and the website hides duplicate static cards when the Supabase versions load.
 
 New member accounts are automatically added to `public.subscribers`. Existing auth users are backfilled into subscribers the next time `supabase-schema.sql` is run, unless their email is already in the subscriber table.

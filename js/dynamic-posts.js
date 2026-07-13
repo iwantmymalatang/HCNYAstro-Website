@@ -430,7 +430,7 @@ async function initDynamicEditor() {
         }
 
         if (!data?.length) {
-            postList.innerHTML = '<p class="builder-status">No dynamic posts yet.</p>';
+            postList.innerHTML = '<p class="builder-status">No posts yet.</p>';
             return;
         }
 

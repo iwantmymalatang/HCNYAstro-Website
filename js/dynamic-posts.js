@@ -74,6 +74,10 @@ function formatDate(value) {
     }).format(date).replace(/\//g, ".");
 }
 
+function permissionHelp(action) {
+    return `${action} did not change anything. If this keeps happening, run the latest supabase-schema.sql in Supabase SQL Editor so authenticated users can manage posts.`;
+}
+
 function dynamicCard(post) {
     const card = document.createElement("article");
     card.className = "post-card dynamic-post-card";
@@ -300,9 +304,18 @@ async function initDynamicEditor() {
             item.querySelector('[data-action="delete"]').addEventListener("click", async () => {
                 const confirmed = window.confirm(`Delete "${post.title}"?`);
                 if (!confirmed) return;
-                const result = await client.from("posts").delete().eq("id", post.id);
+                postStatus.textContent = "Deleting...";
+                const result = await client
+                    .from("posts")
+                    .delete()
+                    .eq("id", post.id)
+                    .select("id");
                 if (result.error) {
                     postStatus.textContent = result.error.message;
+                    return;
+                }
+                if (!result.data?.length) {
+                    postStatus.textContent = permissionHelp("Delete");
                     return;
                 }
                 if (document.getElementById("dynamic-edit-id").value === post.id) resetEditor();
@@ -370,11 +383,15 @@ async function initDynamicEditor() {
         if (imageUrl) payload.image_url = imageUrl;
 
         const result = editId
-            ? await client.from("posts").update(payload).eq("id", editId)
-            : await client.from("posts").insert({ ...payload, image_url: imageUrl });
+            ? await client.from("posts").update(payload).eq("id", editId).select("id")
+            : await client.from("posts").insert({ ...payload, image_url: imageUrl }).select("id");
         const { error } = result;
         if (error) {
             postStatus.textContent = error.message;
+            return;
+        }
+        if (!result.data?.length) {
+            postStatus.textContent = permissionHelp(editId ? "Save" : "Publish");
             return;
         }
 

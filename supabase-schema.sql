@@ -14,17 +14,27 @@ create table if not exists public.posts (
 
 alter table public.posts enable row level security;
 
+drop policy if exists "Published posts are readable" on public.posts;
 create policy "Published posts are readable"
 on public.posts
 for select
 using (published = true);
 
+drop policy if exists "Authenticated users can read all posts" on public.posts;
+create policy "Authenticated users can read all posts"
+on public.posts
+for select
+to authenticated
+using (true);
+
+drop policy if exists "Authenticated users can create posts" on public.posts;
 create policy "Authenticated users can create posts"
 on public.posts
 for insert
 to authenticated
 with check (true);
 
+drop policy if exists "Authenticated users can update posts" on public.posts;
 create policy "Authenticated users can update posts"
 on public.posts
 for update
@@ -32,6 +42,7 @@ to authenticated
 using (true)
 with check (true);
 
+drop policy if exists "Authenticated users can delete posts" on public.posts;
 create policy "Authenticated users can delete posts"
 on public.posts
 for delete
@@ -42,17 +53,20 @@ insert into storage.buckets (id, name, public)
 values ('post-images', 'post-images', true)
 on conflict (id) do update set public = true;
 
+drop policy if exists "Post images are public" on storage.objects;
 create policy "Post images are public"
 on storage.objects
 for select
 using (bucket_id = 'post-images');
 
+drop policy if exists "Authenticated users can upload post images" on storage.objects;
 create policy "Authenticated users can upload post images"
 on storage.objects
 for insert
 to authenticated
 with check (bucket_id = 'post-images');
 
+drop policy if exists "Authenticated users can update post images" on storage.objects;
 create policy "Authenticated users can update post images"
 on storage.objects
 for update

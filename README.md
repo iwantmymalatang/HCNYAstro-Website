@@ -4,9 +4,9 @@ Hugo site for HCNYAstro with Supabase-powered posts.
 
 ## Roles
 
-- Members automatically receive post email notifications after signing up.
+- Signed-up accounts automatically receive post email notifications.
 - New Supabase Auth accounts start as `member`.
-- Contributors can log in at `/admin/` and create, edit, publish, draft, delete, and upload images for posts.
+- Contributors can log in at `/admin/`, open the contributor page, and create, edit, publish, draft, delete, and upload images for posts.
 - Admins have contributor permissions and can be used as owner accounts.
 
 After running `supabase-schema.sql`, promote an approved account in Supabase SQL Editor:
@@ -15,6 +15,14 @@ After running `supabase-schema.sql`, promote an approved account in Supabase SQL
 update public.profiles
 set role = 'contributor'
 where email = 'student@example.com';
+```
+
+For the HCNY Astro Gmail account:
+
+```sql
+update public.profiles
+set role = 'contributor'
+where email = 'hcnyastro@gmail.com';
 ```
 
 To make an owner account:

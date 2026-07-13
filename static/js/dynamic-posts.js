@@ -250,20 +250,20 @@ async function initDynamicLogin() {
     const modeDetails = {
         signin: {
             title: "Sign in",
-            copy: "Use your member or contributor account.",
+            copy: "Use the account you signed up with.",
             submit: "Sign in",
             autocomplete: "current-password",
         },
         signup: {
-            title: "Join as member",
-            copy: "Member accounts can read posts and receive updates automatically. The owner can later approve contributor access.",
-            submit: "Create member account",
+            title: "Sign up",
+            copy: "Create one account for updates. The owner can later approve contributor access.",
+            submit: "Create account",
             autocomplete: "new-password",
         },
         admin: {
-            title: "Post editor login",
+            title: "Contributor login",
             copy: "Only owner-approved contributor and admin accounts can manage posts.",
-            submit: "Open post editor",
+            submit: "Open contributor page",
             autocomplete: "current-password",
         },
     };
@@ -316,7 +316,7 @@ async function initDynamicLogin() {
         }
 
         if (mode === "signup") {
-            loginStatus.textContent = "Member account created. You will receive post updates automatically. Ask the owner if you need contributor access.";
+            loginStatus.textContent = "Account created. You will receive post updates automatically. Ask the owner if you need contributor access.";
             return;
         }
         window.location.href = editorUrl;
@@ -346,7 +346,7 @@ async function initDynamicEditor() {
     const loginUrl = mount.dataset.loginUrl || "../admin/";
 
     if (!client) {
-        editorStatus.textContent = "Post editor is not connected yet.";
+        editorStatus.textContent = "Contributor page is not connected yet.";
         return;
     }
 
@@ -363,7 +363,7 @@ async function initDynamicEditor() {
             .eq("id", data.session.user.id)
             .single();
         if (error || !["contributor", "admin"].includes(profile?.role)) {
-            editorStatus.innerHTML = "This login is a member account. Ask the owner to make it a contributor before editing posts.";
+            editorStatus.innerHTML = "This account is signed in, but it is not approved as a contributor yet.";
             const logout = document.createElement("button");
             logout.type = "button";
             logout.textContent = "Log out";

@@ -1,5 +1,5 @@
 +++
-title = "Post Editor"
+title = "Contributor"
 layout = "admin-editor"
 draft = false
 +++

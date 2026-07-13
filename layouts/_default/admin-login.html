@@ -3,7 +3,7 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Members receive post updates automatically. Post editing is only for owner-approved contributors and admins.</p>
+        <p>Sign in or sign up with one account. Owner-approved contributors can manage posts.</p>
     </div>
 </section>
 
@@ -16,23 +16,23 @@
 >
     <div class="auth-tabs" role="tablist" aria-label="Login options">
         <button type="button" class="is-active" data-auth-mode="signin">Sign in</button>
-        <button type="button" data-auth-mode="signup">Join as member</button>
-        <button type="button" data-auth-mode="admin">Post editor login</button>
+        <button type="button" data-auth-mode="signup">Sign up</button>
+        <button type="button" data-auth-mode="admin">Contributor login</button>
     </div>
     <div class="role-guide">
         <div>
-            <strong>Member</strong>
-            <span>Read posts and automatically receive email updates.</span>
+            <strong>Signed in</strong>
+            <span>Receive post updates automatically.</span>
         </div>
         <div>
-            <strong>Contributor/Admin</strong>
+            <strong>Contributor</strong>
             <span>Create, edit, publish, and delete posts after owner approval.</span>
         </div>
     </div>
     <form class="post-form auth-panel" id="dynamic-login-form">
         <div class="auth-mode-copy" id="auth-mode-copy">
             <strong>Sign in</strong>
-            <p>Use your member or contributor account.</p>
+            <p>Use the account you signed up with.</p>
         </div>
         <input id="auth-mode" type="hidden" value="signin">
         <label>

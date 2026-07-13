@@ -339,5 +339,7 @@ drop policy if exists "Authenticated users can update post images" on storage.ob
 
 -- To approve an account as a contributor, replace the email below and run:
 -- update public.profiles set role = 'contributor' where email = 'student@example.com';
+-- HCNY Astro Gmail contributor:
+-- update public.profiles set role = 'contributor' where email = 'hcnyastro@gmail.com';
 -- To make an owner/admin account, run:
 -- update public.profiles set role = 'admin' where email = 'owner@example.com';

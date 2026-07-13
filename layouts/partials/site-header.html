@@ -9,7 +9,7 @@
                     {{ $menuURL := .URL | relLangURL }}
                     <a href="{{ $menuURL }}"{{ if or ($.IsMenuCurrent "main" .) (eq $.RelPermalink $menuURL) }} aria-current="page"{{ end }}>{{ .Name }}</a>
                 {{ end }}
-                <a class="login-link" href="{{ "admin/" | relURL }}">New post</a>
+                <a class="login-link" href="{{ "admin/" | relURL }}">Login</a>
             </nav>
         </div>
     </div>

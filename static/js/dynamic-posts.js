@@ -78,6 +78,10 @@ function permissionHelp(action) {
     return `${action} did not change anything. If this keeps happening, run the latest supabase-schema.sql in Supabase SQL Editor so authenticated users can manage posts.`;
 }
 
+function sitePostUrl(slug) {
+    return new URL(`?post=${encodeURIComponent(slug)}`, `${window.location.origin}${window.location.pathname.replace(/\/post-admin\/?$/, "/posts/")}`).href;
+}
+
 function dynamicCard(post) {
     const card = document.createElement("article");
     card.className = "post-card dynamic-post-card";
@@ -162,6 +166,42 @@ async function initDynamicPosts() {
     list.classList.remove("is-loading-dynamic");
 }
 
+async function initViewerSubscribe() {
+    const mount = document.getElementById("viewer-subscribe");
+    if (!mount) return;
+
+    const client = getClient(getConfig(mount));
+    const form = document.getElementById("viewer-subscribe-form");
+    const status = document.getElementById("viewer-subscribe-status");
+    const params = new URLSearchParams(window.location.search);
+    const unsubscribeToken = params.get("unsubscribe");
+
+    if (!client) {
+        status.textContent = "Subscriptions are not connected yet.";
+        return;
+    }
+
+    if (unsubscribeToken) {
+        status.textContent = "Unsubscribing...";
+        const { error } = await client.rpc("unsubscribe_viewer", { input_token: unsubscribeToken });
+        status.textContent = error ? error.message : "You are unsubscribed.";
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const email = document.getElementById("viewer-email").value.trim().toLowerCase();
+        if (!email) return;
+        status.textContent = "Subscribing...";
+        const { error } = await client.rpc("subscribe_viewer", { input_email: email });
+        if (error) {
+            status.textContent = error.message;
+            return;
+        }
+        form.reset();
+        status.textContent = "Subscribed. New posts will be emailed to you.";
+    });
+}
+
 async function initDynamicLogin() {
     const mount = document.getElementById("dynamic-login");
     if (!mount) return;
@@ -228,6 +268,26 @@ async function initDynamicEditor() {
             window.location.href = loginUrl;
             return false;
         }
+
+        const { data: profile, error } = await client
+            .from("profiles")
+            .select("role")
+            .eq("id", data.session.user.id)
+            .single();
+        if (error || !["contributor", "admin"].includes(profile?.role)) {
+            editorStatus.innerHTML = "This login is a viewer account. Ask the owner to make it a contributor before editing posts.";
+            const logout = document.createElement("button");
+            logout.type = "button";
+            logout.textContent = "Log out";
+            logout.className = "inline-admin-button";
+            logout.addEventListener("click", async () => {
+                await client.auth.signOut();
+                window.location.href = loginUrl;
+            });
+            editorStatus.append(" ", logout);
+            return false;
+        }
+
         editorStatus.hidden = true;
         postForm.hidden = false;
         manager.hidden = false;
@@ -398,11 +458,27 @@ async function initDynamicEditor() {
         resetEditor();
         await loadAdminPosts();
         postStatus.innerHTML = `Saved. <a href="../posts/?post=${encodeURIComponent(slug)}">Open post</a>`;
+
+        if (!editId && payload.published) {
+            const notification = await client.functions.invoke("notify-new-post", {
+                body: {
+                    title,
+                    summary: payload.summary,
+                    slug,
+                    url: sitePostUrl(slug),
+                    imageUrl: imageUrl || null,
+                },
+            });
+            if (notification.error) {
+                postStatus.innerHTML += ` Email/social notification was not sent: ${escapeHtml(notification.error.message)}`;
+            }
+        }
     });
 
     await requireAuth();
 }
 
 await initDynamicPosts();
+await initViewerSubscribe();
 await initDynamicLogin();
 await initDynamicEditor();

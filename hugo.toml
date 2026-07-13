@@ -12,8 +12,8 @@ theme = "hello-friend-ng"
   defaultTheme = "dark"
   githubRepo = "https://github.com/iwantmymalatang/HCNYAstro-Website"
   tagline = "Astronomy olympiad notes, handouts, and updates for HCNYAstro."
-  supabaseUrl = ""
-  supabaseAnonKey = ""
+  supabaseUrl = "https://wyntavutvtockrinvafq.supabase.co"
+  supabaseAnonKey = "sb_publishable_iTg11KogQQTxrN4YPTegOw_lg8YgVEs"
   supabaseStorageBucket = "post-images"
 
 [menu]

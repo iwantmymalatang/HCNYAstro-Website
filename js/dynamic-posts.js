@@ -562,7 +562,8 @@ async function initDynamicEditor() {
                 },
             });
             if (notification.error) {
-                postStatus.innerHTML += ` Email/social notification was not sent: ${escapeHtml(notification.error.message)}`;
+                const detail = notification.data?.error || notification.error.message;
+                postStatus.innerHTML += ` Email/social notification was not sent: ${escapeHtml(detail)}`;
             }
         }
     });

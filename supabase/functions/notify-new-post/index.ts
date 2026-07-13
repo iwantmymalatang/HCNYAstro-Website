@@ -23,7 +23,13 @@ function json(body: unknown, status = 200) {
 async function sendEmail(to: string, subject: string, html: string) {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("EMAIL_FROM");
-  if (!apiKey || !from) return { skipped: true };
+  if (!apiKey || !from) {
+    return {
+      skipped: true,
+      ok: false,
+      error: "Missing RESEND_API_KEY or EMAIL_FROM in Supabase Edge Function secrets.",
+    };
+  }
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -34,7 +40,8 @@ async function sendEmail(to: string, subject: string, html: string) {
     body: JSON.stringify({ from, to, subject, html }),
   });
 
-  return { skipped: false, ok: response.ok, status: response.status, body: await response.text() };
+  const body = await response.text();
+  return { skipped: false, ok: response.ok, status: response.status, body };
 }
 
 async function publishInstagramStory(payload: NotifyPayload) {
@@ -120,10 +127,21 @@ Deno.serve(async (req) => {
   }
 
   const instagram = await publishInstagramStory(payload);
+  const failedEmails = emailResults.filter((result) => !result.ok);
+  if ((subscribers?.length || 0) > 0 && failedEmails.length === emailResults.length) {
+    return json({
+      error: failedEmails[0]?.error || failedEmails[0]?.body || "Email sending failed.",
+      emailCount: subscribers?.length || 0,
+      emailResults: failedEmails,
+      instagram,
+    }, 500);
+  }
+
   return json({
     ok: true,
     emailCount: subscribers?.length || 0,
     emailsConfigured: emailResults.some((result) => !result.skipped),
+    emailResults,
     instagram,
   });
 });

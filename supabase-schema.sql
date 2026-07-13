@@ -149,6 +149,13 @@ begin
   on conflict (id) do update
   set email = excluded.email,
       updated_at = now();
+
+  if new.email is not null then
+    insert into public.subscribers (email, active, updated_at)
+    values (lower(trim(new.email)), true, now())
+    on conflict (email) do nothing;
+  end if;
+
   return new;
 end;
 $$;
@@ -166,6 +173,12 @@ set email = excluded.email,
     updated_at = now();
 
 update public.profiles set role = 'member' where role = 'viewer';
+
+insert into public.subscribers (email, active, updated_at)
+select lower(trim(email)), true, now()
+from auth.users
+where email is not null
+on conflict (email) do nothing;
 
 create or replace function public.subscribe_member(input_email text)
 returns void

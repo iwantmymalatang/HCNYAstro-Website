@@ -4,7 +4,7 @@ Hugo site for HCNYAstro with Supabase-powered dynamic posts.
 
 ## Roles
 
-- Members can subscribe to post email notifications from the Posts page.
+- Members automatically receive post email notifications after signing up.
 - New Supabase Auth accounts start as `member`.
 - Contributors can log in at `/admin/` and create, edit, publish, draft, delete, and upload images for posts.
 - Admins have contributor permissions and can be used as owner accounts.
@@ -56,3 +56,5 @@ hugo server -D
 Static Markdown posts can still live in `content/posts/`, but normal posting should happen through the website admin editor.
 
 The two original Markdown posts are also seeded into Supabase by `supabase-schema.sql`. After rerunning the SQL, they appear in the post editor and can be edited or deleted like other dynamic posts. The static Markdown versions stay as a fallback, and the website hides duplicate static cards when the dynamic versions load.
+
+New member accounts are automatically added to `public.subscribers`. Existing auth users are backfilled into subscribers the next time `supabase-schema.sql` is run, unless their email is already in the subscriber table.

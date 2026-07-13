@@ -256,7 +256,7 @@ async function initDynamicLogin() {
         },
         signup: {
             title: "Join as member",
-            copy: "Member accounts can read posts and receive updates. The owner can later approve contributor access.",
+            copy: "Member accounts can read posts and receive updates automatically. The owner can later approve contributor access.",
             submit: "Create member account",
             autocomplete: "new-password",
         },
@@ -316,7 +316,7 @@ async function initDynamicLogin() {
         }
 
         if (mode === "signup") {
-            loginStatus.textContent = "Member account created. Ask the owner if you need contributor access.";
+            loginStatus.textContent = "Member account created. You will receive post updates automatically. Ask the owner if you need contributor access.";
             return;
         }
         window.location.href = editorUrl;

@@ -3,7 +3,7 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Approved members can log in to manage website posts.</p>
+        <p>Viewers can make an account. Contributor and admin access must be approved by the site owner.</p>
     </div>
 </section>
 
@@ -14,17 +14,27 @@
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
     data-editor-url="{{ "post-admin/" | relURL }}"
 >
+    <div class="auth-tabs" role="tablist" aria-label="Login options">
+        <button type="button" class="is-active" data-auth-mode="signin">Sign in</button>
+        <button type="button" data-auth-mode="signup">Sign up</button>
+        <button type="button" data-auth-mode="admin">Admin login</button>
+    </div>
     <form class="post-form auth-panel" id="dynamic-login-form">
+        <div class="auth-mode-copy" id="auth-mode-copy">
+            <strong>Sign in</strong>
+            <p>Use your viewer or contributor account.</p>
+        </div>
+        <input id="auth-mode" type="hidden" value="signin">
         <label>
             <span>Email</span>
-            <input id="login-email" type="email" autocomplete="email" placeholder="approved@example.com" required>
+            <input id="login-email" type="email" autocomplete="email" placeholder="email@example.com" required>
         </label>
         <label>
             <span>Password</span>
             <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" required>
         </label>
         <div class="builder-actions">
-            <button type="submit">Log in</button>
+            <button type="submit" id="login-submit-button">Sign in</button>
         </div>
         <p class="builder-status" id="login-status"></p>
     </form>

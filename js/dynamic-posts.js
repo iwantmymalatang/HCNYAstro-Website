@@ -232,7 +232,30 @@ async function initDynamicLogin() {
     const client = getClient(config);
     const loginForm = document.getElementById("dynamic-login-form");
     const loginStatus = document.getElementById("login-status");
+    const modeInput = document.getElementById("auth-mode");
+    const modeCopy = document.getElementById("auth-mode-copy");
+    const submitButton = document.getElementById("login-submit-button");
     const editorUrl = mount.dataset.editorUrl || "../post-admin/";
+    const modeDetails = {
+        signin: {
+            title: "Sign in",
+            copy: "Use your viewer or contributor account.",
+            submit: "Sign in",
+            autocomplete: "current-password",
+        },
+        signup: {
+            title: "Sign up",
+            copy: "New accounts start as viewers. The site owner must approve contributor or admin access.",
+            submit: "Create viewer account",
+            autocomplete: "new-password",
+        },
+        admin: {
+            title: "Admin login",
+            copy: "Only owner-approved contributor and admin accounts can manage posts.",
+            submit: "Admin login",
+            autocomplete: "current-password",
+        },
+    };
 
     if (!client) {
         loginStatus.textContent = "Login is not connected yet.";
@@ -245,18 +268,50 @@ async function initDynamicLogin() {
         return;
     }
 
+    function setAuthMode(mode) {
+        const detail = modeDetails[mode] || modeDetails.signin;
+        modeInput.value = mode;
+        modeCopy.innerHTML = `<strong>${detail.title}</strong><p>${detail.copy}</p>`;
+        submitButton.textContent = detail.submit;
+        document.getElementById("login-password").autocomplete = detail.autocomplete;
+        document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.authMode === mode);
+        });
+        loginStatus.textContent = "";
+    }
+
+    document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+        button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
+    });
+
     loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        loginStatus.textContent = "Logging in...";
+        const mode = modeInput.value || "signin";
+        loginStatus.textContent = mode === "signup" ? "Creating account..." : "Logging in...";
         const email = document.getElementById("login-email").value.trim();
         const password = document.getElementById("login-password").value;
-        const { error } = await client.auth.signInWithPassword({ email, password });
+        const result = mode === "signup"
+            ? await client.auth.signUp({ email, password })
+            : await client.auth.signInWithPassword({ email, password });
+        const { error } = result;
         if (error) {
             loginStatus.textContent = error.message;
             return;
         }
+
+        if (mode === "signup" && !result.data.session) {
+            loginStatus.textContent = "Account created. Check your email if Supabase asks you to confirm it.";
+            return;
+        }
+
+        if (mode === "signup") {
+            loginStatus.textContent = "Viewer account created. Ask the owner if you need contributor access.";
+            return;
+        }
         window.location.href = editorUrl;
     });
+
+    setAuthMode("signin");
 }
 
 async function initDynamicEditor() {
@@ -322,7 +377,7 @@ async function initDynamicEditor() {
         document.getElementById("dynamic-edit-id").value = "";
         document.getElementById("dynamic-current-slug").value = "";
         imagePreviewWrap.hidden = true;
-        modeLabel.textContent = "New post";
+        modeLabel.textContent = "Create post";
         saveButton.textContent = "Publish post";
         postStatus.textContent = "";
     }

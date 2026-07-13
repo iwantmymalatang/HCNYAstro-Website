@@ -1,5 +1,5 @@
 +++
-title = "Admin Login"
+title = "Login"
 layout = "admin-login"
 draft = false
 +++

@@ -3,14 +3,9 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     {{ with .Content }}<div class="page-summary">{{ . }}</div>{{ end }}
-    {{ if eq .Section "posts" }}
-        <div class="owner-actions">
-            <a class="owner-action primary" href="{{ "admin/" | relURL }}">Use Post Builder</a>
-        </div>
-    {{ end }}
 </section>
 
-<section class="shell post-list">
+<section class="shell post-list"{{ if eq .Section "posts" }} id="post-list"{{ end }}>
     {{ range .Paginator.Pages }}
         <article class="post-card">
             <div>
@@ -25,13 +20,12 @@
     {{ end }}
 </section>
 {{ if eq .Section "posts" }}
-<section
-    class="shell dynamic-posts"
+<div
     id="dynamic-posts"
     data-supabase-url="{{ .Site.Params.supabaseUrl }}"
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
     data-site-base="{{ .Site.BaseURL }}"
-></section>
+></div>
 {{ end }}
 {{ end }}
 

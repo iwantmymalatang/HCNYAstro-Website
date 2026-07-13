@@ -91,14 +91,16 @@ async function initDynamicPosts() {
             .single();
 
         document.querySelector(".page-head")?.setAttribute("hidden", "");
-        document.querySelector(".post-list")?.setAttribute("hidden", "");
+        document.getElementById("post-list")?.setAttribute("hidden", "");
 
         if (error || !data) {
+            mount.className = "shell dynamic-posts";
             mount.innerHTML = '<article class="single dynamic-single"><a class="back-link" href="./">← Back</a><h1>Post not found</h1></article>';
             return;
         }
 
         document.title = `${data.title} | HCNY Astronomy`;
+        mount.className = "shell dynamic-posts";
         mount.innerHTML = `
             <article class="single dynamic-single">
                 <header class="single-head">
@@ -120,26 +122,30 @@ async function initDynamicPosts() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        mount.innerHTML = '<p class="builder-status">Dynamic posts could not load.</p>';
+        mount.className = "shell";
+        mount.innerHTML = '<p class="builder-status">Posts could not load.</p>';
         return;
     }
     if (!data?.length) return;
 
-    mount.innerHTML = `
-        <div class="dynamic-post-heading"><span>Dynamic posts</span></div>
-        <div class="post-list dynamic-list">
-            ${data.map((post) => `
-                <article class="post-card">
-                    <div>
-                        <time>${formatDate(post.created_at)}</time>
-                        <h2><a href="?post=${encodeURIComponent(post.slug)}">${escapeHtml(post.title)}</a></h2>
-                        ${post.summary ? `<p>${escapeHtml(post.summary)}</p>` : ""}
-                    </div>
-                    <a class="read-link" href="?post=${encodeURIComponent(post.slug)}">Read</a>
-                </article>
-            `).join("")}
-        </div>
-    `;
+    const list = document.getElementById("post-list");
+    if (!list) return;
+
+    const dynamicCards = data.map((post) => {
+        const card = document.createElement("article");
+        card.className = "post-card dynamic-post-card";
+        card.innerHTML = `
+            <div>
+                <time>${formatDate(post.created_at)}</time>
+                <h2><a href="?post=${encodeURIComponent(post.slug)}">${escapeHtml(post.title)}</a></h2>
+                ${post.summary ? `<p>${escapeHtml(post.summary)}</p>` : ""}
+            </div>
+            <a class="read-link" href="?post=${encodeURIComponent(post.slug)}">Read</a>
+        `;
+        return card;
+    });
+
+    list.prepend(...dynamicCards);
 }
 
 async function initDynamicLogin() {

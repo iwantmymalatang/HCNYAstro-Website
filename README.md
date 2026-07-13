@@ -54,3 +54,5 @@ hugo server -D
 ```
 
 Static Markdown posts can still live in `content/posts/`, but normal posting should happen through the website admin editor.
+
+The two original Markdown posts are also seeded into Supabase by `supabase-schema.sql`. After rerunning the SQL, they appear in the post editor and can be edited or deleted like other dynamic posts. The static Markdown versions stay as a fallback, and the website hides duplicate static cards when the dynamic versions load.

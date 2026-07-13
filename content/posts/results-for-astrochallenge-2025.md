@@ -19,9 +19,7 @@ Astrochallenge is an astronomy competition jointly organised by the astronomical
 In June 2025, a team consisting of 4 HCNY Astro members - Ngiam Hui En, Emma Zhang, Alyssa Tay, and Ng Chyng Yi participated in Astrochallenge. We were awarded Outstanding Project (Silver) and placed third overall.
 
 
-In the Project round, we created a wonderful poster about the Voyager 1 Golden Records.
-
-![Poster](/HCNYAstro-Website/images/posts/voyager-1-is-an-unmanned-space-probe-launched-by-nasa-on-september-5-197.png)
+In the Project round, we created a poster about the Voyager 1 Golden Records.
 
 Over at the team round, we tackled questions like: What would happen if someone played Valorant and got so mad that she punched the Earth so hard it tilted?
 The competition taught us what an open mind and a spirit of inquiry can do - tackling complex and unfamiliar problems and turning them into meaningful learning opportunities.

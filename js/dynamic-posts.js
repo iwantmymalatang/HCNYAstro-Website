@@ -102,6 +102,16 @@ function sitePostUrl(slug) {
     return new URL(`?post=${encodeURIComponent(slug)}`, `${window.location.origin}${window.location.pathname.replace(/\/post-admin\/?$/, "/posts/")}`).href;
 }
 
+function removeStaticDuplicate(slug, list) {
+    const encodedSlug = encodeURIComponent(slug);
+    list.querySelectorAll(".post-card:not(.dynamic-post-card)").forEach((card) => {
+        const link = card.querySelector("h2 a");
+        if (link?.getAttribute("href")?.includes(`/posts/${encodedSlug}/`)) {
+            card.remove();
+        }
+    });
+}
+
 function dynamicCard(post) {
     const card = document.createElement("article");
     card.className = "post-card dynamic-post-card";
@@ -184,6 +194,7 @@ async function initDynamicPosts() {
     if (!list) return;
 
     list.querySelectorAll(".dynamic-post-card").forEach((card) => card.remove());
+    data.forEach((post) => removeStaticDuplicate(post.slug, list));
     list.prepend(...data.map(dynamicCard));
     list.classList.remove("is-loading-dynamic");
 }
@@ -244,15 +255,15 @@ async function initDynamicLogin() {
             autocomplete: "current-password",
         },
         signup: {
-            title: "Sign up",
-            copy: "New accounts start as members. The site owner must approve contributor or admin access.",
+            title: "Join as member",
+            copy: "Member accounts can read posts and receive updates. The owner can later approve contributor access.",
             submit: "Create member account",
             autocomplete: "new-password",
         },
         admin: {
-            title: "Admin login",
+            title: "Post editor login",
             copy: "Only owner-approved contributor and admin accounts can manage posts.",
-            submit: "Admin login",
+            submit: "Open post editor",
             autocomplete: "current-password",
         },
     };

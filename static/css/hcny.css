@@ -1,14 +1,14 @@
 :root {
     color-scheme: dark;
-    --bg: #03040a;
-    --panel: #0b0d18;
-    --panel-2: #141526;
-    --line: #252846;
-    --text: #f4f4ff;
-    --muted: #a6a9c2;
-    --accent: #8f8cff;
+    --bg: #08090d;
+    --panel: #101116;
+    --panel-2: #18191f;
+    --line: #30313a;
+    --text: #f1f1f3;
+    --muted: #b0b2ba;
+    --accent: #aaa6c8;
     --accent-2: #ffffff;
-    --good: #c9c7ff;
+    --good: #d3d0e5;
 }
 
 * {
@@ -26,9 +26,9 @@ body {
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: var(--text);
     background:
-        radial-gradient(circle at 18% 0%, rgba(86, 102, 255, 0.24), transparent 30rem),
-        radial-gradient(circle at 90% 12%, rgba(136, 70, 190, 0.20), transparent 26rem),
-        linear-gradient(180deg, #03040a 0%, #0b1024 48%, #070712 100%);
+        radial-gradient(circle at 16% 0%, rgba(124, 126, 150, 0.16), transparent 30rem),
+        radial-gradient(circle at 90% 12%, rgba(92, 82, 118, 0.14), transparent 26rem),
+        linear-gradient(180deg, #08090d 0%, #11131a 48%, #0b0c10 100%);
     background-attachment: fixed;
 }
 
@@ -38,9 +38,9 @@ body::before {
     inset: 0;
     z-index: -1;
     background:
-        radial-gradient(circle at 18% 0%, rgba(86, 102, 255, 0.24), transparent 30rem),
-        radial-gradient(circle at 90% 12%, rgba(136, 70, 190, 0.20), transparent 26rem),
-        linear-gradient(180deg, #03040a 0%, #0b1024 48%, #070712 100%);
+        radial-gradient(circle at 16% 0%, rgba(124, 126, 150, 0.16), transparent 30rem),
+        radial-gradient(circle at 90% 12%, rgba(92, 82, 118, 0.14), transparent 26rem),
+        linear-gradient(180deg, #08090d 0%, #11131a 48%, #0b0c10 100%);
 }
 
 main {
@@ -84,11 +84,11 @@ a {
     padding: 7px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 999px;
-    background: rgba(3, 4, 10, 0.46);
+    background: rgba(12, 13, 17, 0.58);
     backdrop-filter: blur(24px) saturate(150%);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.10),
-        0 14px 34px rgba(0, 0, 0, 0.26);
+        0 14px 34px rgba(0, 0, 0, 0.22);
 }
 
 .brand {
@@ -211,8 +211,8 @@ h1 {
     max-width: 820px;
     font-size: clamp(4rem, 11vw, 9rem);
     text-shadow:
-        0 0 32px rgba(143, 140, 255, 0.38),
-        0 18px 52px rgba(0, 0, 0, 0.72);
+        0 0 30px rgba(170, 166, 200, 0.26),
+        0 18px 52px rgba(0, 0, 0, 0.62);
 }
 
 .lede {
@@ -267,7 +267,7 @@ h1 {
     display: block;
     opacity: 0.76;
     pointer-events: auto;
-    filter: drop-shadow(0 0 42px rgba(111, 125, 255, 0.34));
+    filter: drop-shadow(0 0 36px rgba(140, 136, 170, 0.24));
 }
 
 .section-grid {
@@ -290,7 +290,7 @@ h1 {
     padding: 22px;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 18px;
-    background: rgba(3, 4, 10, 0.18);
+    background: rgba(14, 15, 20, 0.34);
     text-decoration: none;
 }
 
@@ -360,7 +360,7 @@ h1 {
     padding: 20px;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 18px;
-    background: rgba(3, 4, 10, 0.18);
+    background: rgba(14, 15, 20, 0.34);
 }
 
 .subscribe-panel h2 {
@@ -417,7 +417,7 @@ h1 {
     padding: 24px;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 18px;
-    background: rgba(3, 4, 10, 0.18);
+    background: rgba(14, 15, 20, 0.34);
 }
 
 .post-card time,
@@ -451,7 +451,7 @@ h1 {
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.07);
-    color: #d8d8ff;
+    color: #dedce8;
     font-size: 0.78rem;
     font-weight: 800;
 }
@@ -488,7 +488,7 @@ h1 {
 
 .back-link:hover {
     border-color: var(--accent);
-    background: rgba(143, 140, 255, 0.16);
+    background: rgba(170, 166, 200, 0.14);
     color: var(--accent);
 }
 
@@ -573,7 +573,7 @@ h1 {
 .single-content h3 + p {
     max-width: 680px;
     padding: 0 0 22px 18px;
-    border-left: 2px solid rgba(143, 140, 255, 0.45);
+    border-left: 2px solid rgba(170, 166, 200, 0.36);
 }
 
 .admin-head {
@@ -595,7 +595,7 @@ h1 {
     padding: 22px;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 18px;
-    background: rgba(3, 4, 10, 0.18);
+    background: rgba(14, 15, 20, 0.34);
 }
 
 .post-form label {
@@ -660,8 +660,8 @@ h1 {
 .post-form select:focus,
 .post-form textarea:focus,
 .post-output textarea:focus {
-    border-color: rgba(143, 140, 255, 0.72);
-    box-shadow: 0 0 0 3px rgba(143, 140, 255, 0.15);
+    border-color: rgba(170, 166, 200, 0.68);
+    box-shadow: 0 0 0 3px rgba(170, 166, 200, 0.13);
 }
 
 .output-meta {
@@ -778,7 +778,7 @@ h1 {
     padding: 6px;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 999px;
-    background: rgba(3, 4, 10, 0.18);
+    background: rgba(14, 15, 20, 0.34);
 }
 
 .auth-tabs button {
@@ -797,6 +797,31 @@ h1 {
 .auth-tabs button.is-active {
     background: rgba(255, 255, 255, 0.12);
     color: #ffffff;
+}
+
+.role-guide {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    max-width: 820px;
+}
+
+.role-guide div {
+    display: grid;
+    gap: 5px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
+    background: rgba(14, 15, 20, 0.28);
+}
+
+.role-guide strong {
+    color: #ffffff;
+}
+
+.role-guide span {
+    color: var(--muted);
+    line-height: 1.55;
 }
 
 .auth-mode-copy {
@@ -822,7 +847,7 @@ h1 {
     padding: 22px;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 18px;
-    background: rgba(3, 4, 10, 0.18);
+    background: rgba(14, 15, 20, 0.34);
 }
 
 .admin-post-list {
@@ -1013,7 +1038,8 @@ h1 {
     }
 
     .subscribe-panel,
-    .subscribe-panel form {
+    .subscribe-panel form,
+    .role-guide {
         grid-template-columns: 1fr;
         flex-direction: column;
     }

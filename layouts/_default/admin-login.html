@@ -3,7 +3,7 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Members can make an account. Contributor and admin access must be approved by the site owner.</p>
+        <p>Members can subscribe and read updates. Post editing is only for owner-approved contributors and admins.</p>
     </div>
 </section>
 
@@ -16,8 +16,18 @@
 >
     <div class="auth-tabs" role="tablist" aria-label="Login options">
         <button type="button" class="is-active" data-auth-mode="signin">Sign in</button>
-        <button type="button" data-auth-mode="signup">Sign up</button>
-        <button type="button" data-auth-mode="admin">Admin login</button>
+        <button type="button" data-auth-mode="signup">Join as member</button>
+        <button type="button" data-auth-mode="admin">Post editor login</button>
+    </div>
+    <div class="role-guide">
+        <div>
+            <strong>Member</strong>
+            <span>Read posts and receive email updates.</span>
+        </div>
+        <div>
+            <strong>Contributor/Admin</strong>
+            <span>Create, edit, publish, and delete posts after owner approval.</span>
+        </div>
     </div>
     <form class="post-form auth-panel" id="dynamic-login-form">
         <div class="auth-mode-copy" id="auth-mode-copy">

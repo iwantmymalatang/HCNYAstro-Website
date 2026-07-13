@@ -32,6 +32,73 @@ create table if not exists public.posts (
 alter table public.posts add column if not exists created_by uuid references auth.users(id) on delete set null default auth.uid();
 alter table public.posts add column if not exists tags text[] not null default '{}';
 
+insert into public.posts (
+  title,
+  slug,
+  summary,
+  tags,
+  body,
+  image_url,
+  image_alt,
+  author,
+  published,
+  created_at,
+  updated_at
+)
+values
+(
+  'Results for AstroChallenge 2025',
+  'results-for-astrochallenge-2025',
+  'HCNY Astro members participated in AstroChallenge 2025 and earned Outstanding Project (Silver) plus third overall.',
+  array['competition', 'astrochallenge', 'olympiad'],
+  $$**Context**
+
+Astrochallenge is an astronomy competition jointly organised by the astronomical societies of NUS and NTU. It aims to enhance students' interest and knowledge in astronomy, and hopes to foster closer inter-school ties through the common interest of astronomy. Students will be exposed to a comprehensive array of questions that range from theoretical to practical astronomy. The competition consists of several rounds for Junior Category: Individual round, Team round, and Project round.
+
+**Experience**
+
+In June 2025, a team consisting of 4 HCNY Astro members - Ngiam Hui En, Emma Zhang, Alyssa Tay, and Ng Chyng Yi participated in Astrochallenge. We were awarded Outstanding Project (Silver) and placed third overall.
+
+In the Project round, we created a poster about the Voyager 1 Golden Records.
+
+Over at the team round, we tackled questions like: What would happen if someone played Valorant and got so mad that she punched the Earth so hard it tilted?
+
+The competition taught us what an open mind and a spirit of inquiry can do - tackling complex and unfamiliar problems and turning them into meaningful learning opportunities.$$,
+  null,
+  null,
+  'HCNY Astronomy',
+  true,
+  '2026-06-29T00:00:00+08:00',
+  now()
+),
+(
+  'Collaboration with Raffles Institution Science and Astronomy Club',
+  'ri-collab-post',
+  'HCNY Astro collaborated with Raffles Institution students for astronomy activities, jeopardy, and outdoor stargazing.',
+  array['collaboration', 'stargazing', 'outreach'],
+  $$On 27 Feb, HCNY Astro had the pleasure of collaborating with students from Raffles Institution at the latter's campus, bringing around 60 students from the 3 schools. It was a great chance for students with a shared passion for astronomy to interact and participate in interesting activities.
+
+The main highlights of the collaboration are the astronomy-themed jeopardy game and outdoor stargazing. It was indeed memorable, as the game was met with friendly competition and telescopes were available to focus on celestial objects of the night sky.
+
+Overall, the collaboration was both enjoyable and meaningful, strengthening friendships across schools while fostering a shared interest in astronomy. We look forward to more collaborations in the future.$$,
+  '/HCNYAstro-Website/images/posts/ri-collab-2026.jpeg',
+  'HCNY Astro and Raffles Institution Science and Astronomy Club collaboration group photo',
+  'HCNY Astronomy',
+  true,
+  '2026-06-28T00:00:00+08:00',
+  now()
+)
+on conflict (slug) do update
+set title = excluded.title,
+    summary = excluded.summary,
+    tags = excluded.tags,
+    body = excluded.body,
+    image_url = excluded.image_url,
+    image_alt = excluded.image_alt,
+    author = excluded.author,
+    published = excluded.published,
+    updated_at = now();
+
 create table if not exists public.subscribers (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,

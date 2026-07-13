@@ -436,6 +436,26 @@ h1 {
     text-decoration: none;
 }
 
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 8px 0 4px;
+}
+
+.tag-row span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #d8d8ff;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
 .single {
     min-height: calc(100vh - 118px);
     padding: clamp(72px, 10vh, 118px) 0 96px;

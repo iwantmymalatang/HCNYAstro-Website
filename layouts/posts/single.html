@@ -4,6 +4,11 @@
         <a class="back-link" href="{{ "posts/" | relURL }}">← Back</a>
         <h1>{{ .Title }}</h1>
         {{ if not .Date.IsZero }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 Jan 2006" }}</time>{{ end }}
+        {{ with .Params.tags }}
+            <div class="tag-row">
+                {{ range . }}<span>{{ . }}</span>{{ end }}
+            </div>
+        {{ end }}
     </header>
     <div class="single-content">
         {{ .Content }}

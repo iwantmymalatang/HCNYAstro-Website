@@ -13,6 +13,7 @@ create table if not exists public.posts (
   title text not null,
   slug text not null unique,
   summary text,
+  tags text[] not null default '{}',
   body text not null,
   image_url text,
   image_alt text,
@@ -24,6 +25,7 @@ create table if not exists public.posts (
 );
 
 alter table public.posts add column if not exists created_by uuid references auth.users(id) on delete set null default auth.uid();
+alter table public.posts add column if not exists tags text[] not null default '{}';
 
 create table if not exists public.subscribers (
   id uuid primary key default gen_random_uuid(),

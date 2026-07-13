@@ -11,6 +11,11 @@
             <div>
                 <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
                 <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+                {{ with .Params.tags }}
+                    <div class="tag-row">
+                        {{ range . }}<span>{{ . }}</span>{{ end }}
+                    </div>
+                {{ end }}
                 {{ with .Summary }}<p>{{ . | plainify }}</p>{{ end }}
             </div>
             <a class="read-link" href="{{ .RelPermalink }}">Read</a>

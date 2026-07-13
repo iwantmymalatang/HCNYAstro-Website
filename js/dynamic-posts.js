@@ -78,6 +78,26 @@ function permissionHelp(action) {
     return `${action} did not change anything. If this keeps happening, run the latest supabase-schema.sql in Supabase SQL Editor so authenticated users can manage posts.`;
 }
 
+function normalizeTags(value) {
+    if (Array.isArray(value)) {
+        return value.map((tag) => String(tag).trim()).filter(Boolean);
+    }
+    return String(value || "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+}
+
+function tagsText(tags) {
+    return normalizeTags(tags).join(", ");
+}
+
+function renderTags(tags) {
+    const normalized = normalizeTags(tags);
+    if (!normalized.length) return "";
+    return `<div class="tag-row">${normalized.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>`;
+}
+
 function sitePostUrl(slug) {
     return new URL(`?post=${encodeURIComponent(slug)}`, `${window.location.origin}${window.location.pathname.replace(/\/post-admin\/?$/, "/posts/")}`).href;
 }
@@ -91,6 +111,7 @@ function dynamicCard(post) {
         <div>
             <time>${formatDate(post.created_at)}</time>
             <h2><a href="?post=${encodeURIComponent(post.slug)}">${escapeHtml(post.title)}</a></h2>
+            ${renderTags(post.tags)}
             ${post.summary ? `<p>${escapeHtml(post.summary)}</p>` : ""}
         </div>
         <a class="read-link" href="?post=${encodeURIComponent(post.slug)}">Read</a>
@@ -135,6 +156,7 @@ async function initDynamicPosts() {
                     <a class="back-link" href="./">← Back</a>
                     <h1>${escapeHtml(data.title)}</h1>
                     <time>${formatDate(data.created_at)}</time>
+                    ${renderTags(data.tags)}
                 </header>
                 ${data.image_url ? `<img class="post-hero-image" src="${escapeHtml(data.image_url)}" alt="${escapeHtml(data.image_alt || data.title)}">` : ""}
                 <div class="single-content">${renderBody(data.body)}</div>
@@ -145,7 +167,7 @@ async function initDynamicPosts() {
 
     const { data, error } = await client
         .from("posts")
-        .select("title,slug,summary,created_at")
+        .select("title,slug,summary,tags,created_at")
         .eq("published", true)
         .order("created_at", { ascending: false });
 
@@ -311,6 +333,7 @@ async function initDynamicEditor() {
         document.getElementById("dynamic-title").value = post.title || "";
         document.getElementById("dynamic-author").value = post.author || "HCNY Astronomy";
         document.getElementById("dynamic-summary").value = post.summary || "";
+        document.getElementById("dynamic-tags").value = tagsText(post.tags);
         document.getElementById("dynamic-body").value = post.body || "";
         document.getElementById("dynamic-image-alt").value = post.image_alt || "";
         document.getElementById("dynamic-published").value = post.published ? "true" : "false";
@@ -353,6 +376,7 @@ async function initDynamicEditor() {
                 <div>
                     <time>${formatDate(post.created_at)}</time>
                     <strong>${escapeHtml(post.title)}</strong>
+                    ${renderTags(post.tags)}
                     <span>${post.published ? "Published" : "Draft"}</span>
                 </div>
                 <div class="admin-post-actions">
@@ -435,6 +459,7 @@ async function initDynamicEditor() {
             slug,
             author: document.getElementById("dynamic-author").value.trim() || "HCNY Astronomy",
             summary: document.getElementById("dynamic-summary").value.trim(),
+            tags: normalizeTags(document.getElementById("dynamic-tags").value),
             body,
             image_alt: document.getElementById("dynamic-image-alt").value.trim(),
             published: document.getElementById("dynamic-published").value === "true",
@@ -464,6 +489,7 @@ async function initDynamicEditor() {
                 body: {
                     title,
                     summary: payload.summary,
+                    tags: payload.tags,
                     slug,
                     url: sitePostUrl(slug),
                     imageUrl: imageUrl || null,

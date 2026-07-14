@@ -106,7 +106,7 @@ function isAdmin() {
 }
 
 function isEmailConfirmed() {
-    return Boolean(state.session?.user?.email_confirmed_at || state.session?.user?.confirmed_at);
+    return Boolean(state.session);
 }
 
 function canEdit(row) {
@@ -452,12 +452,13 @@ async function submitComment(event, parentId = null) {
     const body = form.querySelector('[name="comment-body"], #comment-body')?.value.trim();
     if (!body) return;
     status.textContent = "Saving comment...";
-    const { error } = await client.from("forum_comments").insert({
+    const payload = {
         thread_id: state.selectedThread.id,
-        parent_id: parentId,
         body,
         username: displayName(),
-    });
+    };
+    if (parentId) payload.parent_id = parentId;
+    const { error } = await client.from("forum_comments").insert(payload);
     if (error) {
         status.textContent = error.message;
         return;

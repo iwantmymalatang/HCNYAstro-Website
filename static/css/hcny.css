@@ -1024,7 +1024,10 @@ h1 {
     max-height: min(760px, calc(100vh - 44px));
     overflow: auto;
     transform: translate(-50%, -50%);
-    box-shadow: 0 26px 90px rgba(0, 0, 0, 0.72);
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(6, 7, 15, 0.96);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 26px 90px rgba(0, 0, 0, 0.82);
 }
 
 .forum-compose:not(.is-open),
@@ -1044,11 +1047,11 @@ h1 {
     width: min(520px, calc(100% - 28px));
     transform: translate(-50%, -50%);
     padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 18px;
-    background: rgba(3, 4, 10, 0.22);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 26px 90px rgba(0, 0, 0, 0.72);
+    background: rgba(6, 7, 15, 0.96);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 26px 90px rgba(0, 0, 0, 0.82);
 }
 
 .forum-settings-panel .image-helper-head {
@@ -1073,10 +1076,16 @@ h1 {
     padding: 0 13px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.11);
     color: #ffffff;
     font: inherit;
     outline: none;
+}
+
+.forum-compose input,
+.forum-compose select,
+.forum-compose textarea {
+    background: rgba(255, 255, 255, 0.11);
 }
 
 .forum-settings-panel .toggle-row {

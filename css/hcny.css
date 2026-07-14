@@ -1015,6 +1015,60 @@ h1 {
     max-width: none;
 }
 
+.forum-key-panel {
+    display: grid;
+    grid-template-columns: minmax(180px, 320px) auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: end;
+    width: fit-content;
+    max-width: 100%;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 18px;
+    background: rgba(3, 4, 10, 0.22);
+}
+
+.forum-key-panel label {
+    display: grid;
+    gap: 7px;
+}
+
+.forum-key-panel span {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.forum-key-panel input {
+    min-height: 42px;
+    padding: 0 13px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+    font: inherit;
+    outline: none;
+}
+
+.forum-key-panel button {
+    min-height: 42px;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.forum-key-panel button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .forum-posting-as {
     margin: 0;
     color: var(--muted);
@@ -1261,6 +1315,11 @@ h1 {
 
     .forum-tabs button {
         flex: 1 1 180px;
+    }
+
+    .forum-key-panel {
+        width: 100%;
+        grid-template-columns: 1fr;
     }
 
     .hero h1 {

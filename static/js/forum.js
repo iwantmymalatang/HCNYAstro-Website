@@ -4,6 +4,7 @@ const app = document.getElementById("forum-app");
 const config = {
     url: app?.dataset.supabaseUrl?.trim() || "",
     key: app?.dataset.supabaseKey?.trim() || "",
+    postKey: app?.dataset.postKey?.trim() || "",
 };
 const client = config.url && config.key ? createClient(config.url, config.key) : null;
 
@@ -23,6 +24,9 @@ const els = {
     list: document.getElementById("forum-list"),
     thread: document.getElementById("forum-thread"),
     newPost: document.getElementById("forum-new-post"),
+    keyPanel: document.getElementById("forum-key-panel"),
+    keyInput: document.getElementById("forum-post-key"),
+    keyStatus: document.getElementById("forum-key-status"),
     editId: document.getElementById("forum-edit-id"),
     type: document.getElementById("forum-type"),
     postingAs: document.getElementById("forum-posting-as"),
@@ -97,6 +101,10 @@ function canEdit(row) {
 
 function displayName() {
     return state.profile?.username || state.session?.user?.email?.split("@")[0] || "Contributor";
+}
+
+function postKeyUnlocked() {
+    return !config.postKey || sessionStorage.getItem("forumPostKeyUnlocked") === "true";
 }
 
 function resetCompose() {
@@ -207,6 +215,7 @@ async function loadThreads() {
 
 function renderThreadList() {
     els.thread.hidden = true;
+    els.keyPanel.hidden = true;
     if (!state.threads.length) {
         els.list.innerHTML = `<p class="builder-status">No ${state.tab === "guide" ? "guides" : "questions"} yet.</p>`;
         return;
@@ -231,6 +240,7 @@ function renderThreadList() {
 
 async function openThread(id) {
     els.compose.hidden = true;
+    els.keyPanel.hidden = true;
     const { data, error } = await client
         .from("forum_threads")
         .select("*")
@@ -440,11 +450,33 @@ function openComposer() {
         window.location.href = "../admin/";
         return;
     }
+    if (!postKeyUnlocked()) {
+        els.compose.hidden = true;
+        els.thread.hidden = true;
+        els.keyPanel.hidden = false;
+        els.keyInput.value = "";
+        els.keyStatus.textContent = "";
+        els.keyInput.focus();
+        els.keyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+    }
     resetCompose();
     els.compose.hidden = false;
+    els.keyPanel.hidden = true;
     els.thread.hidden = true;
     els.postingAs.textContent = `Posting as ${displayName()}`;
     els.compose.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function submitPostKey(event) {
+    event.preventDefault();
+    if (els.keyInput.value.trim() !== config.postKey) {
+        els.keyStatus.textContent = "Wrong key.";
+        return;
+    }
+    sessionStorage.setItem("forumPostKeyUnlocked", "true");
+    els.keyPanel.hidden = true;
+    openComposer();
 }
 
 async function init() {
@@ -470,6 +502,7 @@ async function init() {
         });
     });
     els.compose.addEventListener("submit", submitThread);
+    els.keyPanel.addEventListener("submit", submitPostKey);
     els.cancelEdit.addEventListener("click", resetCompose);
 
     await loadThreads();

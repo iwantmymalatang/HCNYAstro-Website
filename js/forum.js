@@ -105,8 +105,16 @@ function isAdmin() {
     return isHcnyAdmin() || state.profile?.role === "admin";
 }
 
+function isEmailConfirmed() {
+    return Boolean(state.session?.user?.email_confirmed_at || state.session?.user?.confirmed_at);
+}
+
 function canEdit(row) {
     return isAdmin() || row.created_by === state.session?.user?.id;
+}
+
+function canDeleteComment(comment) {
+    return isAdmin() || comment.created_by === state.session?.user?.id;
 }
 
 function displayName() {
@@ -175,14 +183,32 @@ async function renderAccount() {
         return;
     }
 
+    if (!isEmailConfirmed()) {
+        els.account.innerHTML = `
+            <span>Confirm your email before posting.</span>
+            <button type="button" id="forum-logout">Log out</button>
+        `;
+        document.getElementById("forum-logout").addEventListener("click", async () => {
+            await client.auth.signOut();
+            state.session = null;
+            state.profile = null;
+            await renderAccount();
+            await loadThreads();
+        });
+        els.compose.hidden = true;
+        return;
+    }
+
     els.account.innerHTML = `
         <button type="button" id="forum-new-post">New post</button>
         <span>${escapeHtml(displayName())}</span>
         ${isAdmin() ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
+        ${isAdmin() ? '<button type="button" id="forum-reports">Reports</button>' : ""}
         <button type="button" id="forum-settings">My settings</button>
         <button type="button" id="forum-logout">Log out</button>
     `;
     document.getElementById("forum-new-post").addEventListener("click", openComposer);
+    document.getElementById("forum-reports")?.addEventListener("click", openReports);
     document.getElementById("forum-settings").addEventListener("click", openSettings);
     document.getElementById("forum-logout").addEventListener("click", async () => {
         await client.auth.signOut();
@@ -314,7 +340,10 @@ async function renderSelectedThread() {
     const actions = canEdit(thread)
         ? `<button type="button" data-edit-thread>Edit</button>${isAdmin() ? '<button type="button" data-delete-thread>Delete</button>' : ""}`
         : "";
-    const commentForm = state.session
+    const reportThreadAction = state.session
+        ? '<button type="button" data-report-thread>Report</button>'
+        : "";
+    const commentForm = state.session && isEmailConfirmed()
         ? `<form class="comment-form" id="comment-form">
                 <label>
                     <span>Comment as ${escapeHtml(displayName())}</span>
@@ -323,7 +352,9 @@ async function renderSelectedThread() {
                 <div class="builder-actions"><button type="submit">Comment</button></div>
                 <p class="builder-status" id="comment-status"></p>
             </form>`
-        : '<p class="builder-status"><a href="../admin/">Sign in</a> to comment and vote.</p>';
+        : state.session
+            ? '<p class="builder-status">Confirm your email to comment and vote.</p>'
+            : '<p class="builder-status"><a href="../admin/">Sign in</a> to comment and vote.</p>';
 
     els.thread.innerHTML = `
         <button class="back-link" type="button" data-back-forum>← Back</button>
@@ -332,7 +363,7 @@ async function renderSelectedThread() {
             <h1>${escapeHtml(thread.title)}</h1>
             ${renderTags(thread.tags)}
             <p class="forum-meta">By ${escapeHtml(thread.username || "Contributor")}</p>
-            <div class="admin-post-actions">${actions}</div>
+            <div class="admin-post-actions">${actions}${reportThreadAction}</div>
         </header>
         <div class="single-content">${renderBody(thread.body)}</div>
         <section class="comments">
@@ -347,12 +378,16 @@ async function renderSelectedThread() {
     els.thread.querySelector("[data-back-forum]").addEventListener("click", loadThreads);
     els.thread.querySelector("[data-edit-thread]")?.addEventListener("click", () => editThread(thread));
     els.thread.querySelector("[data-delete-thread]")?.addEventListener("click", () => deleteThread(thread.id));
+    els.thread.querySelector("[data-report-thread]")?.addEventListener("click", () => reportContent({ threadId: thread.id }));
     els.thread.querySelector("#comment-form")?.addEventListener("submit", submitComment);
     els.thread.querySelectorAll("[data-vote-comment]").forEach((button) => {
         button.addEventListener("click", () => voteComment(button.dataset.voteComment, Number(button.dataset.voteValue)));
     });
     els.thread.querySelectorAll("[data-delete-comment]").forEach((button) => {
         button.addEventListener("click", () => deleteComment(button.dataset.deleteComment));
+    });
+    els.thread.querySelectorAll("[data-report-comment]").forEach((button) => {
+        button.addEventListener("click", () => reportContent({ threadId: thread.id, commentId: button.dataset.reportComment }));
     });
     els.thread.querySelectorAll("[data-reply-comment]").forEach((button) => {
         button.addEventListener("click", () => toggleReplyForm(button.dataset.replyComment));
@@ -364,8 +399,11 @@ async function renderSelectedThread() {
 
 function renderComment(comment, groups, depth) {
     const replies = (groups.get(comment.id) || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const deleteAction = canDeleteComment(comment)
+        ? `<button type="button" data-delete-comment="${comment.id}">Delete</button>`
+        : "";
     const actions = state.session
-        ? `<button type="button" data-reply-comment="${comment.id}">Reply</button><button type="button" data-delete-comment="${comment.id}">Delete</button>`
+        ? `<button type="button" data-reply-comment="${comment.id}">Reply</button><button type="button" data-report-comment="${comment.id}">Report</button>${deleteAction}`
         : "";
     const replyForm = state.session
         ? `<form class="reply-form" data-reply-form="${comment.id}" hidden>
@@ -407,6 +445,10 @@ async function submitComment(event, parentId = null) {
     event.preventDefault();
     const form = event.currentTarget;
     const status = form.querySelector("[data-reply-status]") || document.getElementById("comment-status");
+    if (!isEmailConfirmed()) {
+        status.textContent = "Confirm your email before commenting.";
+        return;
+    }
     const body = form.querySelector('[name="comment-body"], #comment-body')?.value.trim();
     if (!body) return;
     status.textContent = "Saving comment...";
@@ -426,6 +468,10 @@ async function submitComment(event, parentId = null) {
 async function voteComment(commentId, value) {
     if (!state.session) {
         window.location.href = "../admin/";
+        return;
+    }
+    if (!isEmailConfirmed()) {
+        setStatus("Confirm your email before voting.");
         return;
     }
     const { error } = await client.from("forum_comment_votes").upsert({
@@ -474,10 +520,108 @@ async function deleteComment(id) {
     await renderSelectedThread();
 }
 
+async function reportContent({ threadId, commentId = null }) {
+    if (!state.session) {
+        window.location.href = "../admin/";
+        return;
+    }
+    if (!isEmailConfirmed()) {
+        setStatus("Confirm your email before reporting content.");
+        return;
+    }
+    const reason = window.prompt("Why are you reporting this? Keep it short.");
+    if (!reason?.trim()) return;
+    const { error } = await client.from("forum_reports").insert({
+        thread_id: threadId,
+        comment_id: commentId,
+        reason: reason.trim().slice(0, 500),
+        username: displayName(),
+    });
+    if (error) {
+        setStatus(friendlyError(error));
+        return;
+    }
+    setStatus("Report sent to admin.");
+}
+
+async function openReports() {
+    if (!isAdmin()) return;
+    els.compose.hidden = true;
+    els.compose.classList.remove("is-open");
+    els.settingsPanel.hidden = true;
+    els.settingsPanel.classList.remove("is-open");
+    els.list.innerHTML = "";
+    els.thread.hidden = false;
+    els.thread.innerHTML = `
+        <button class="back-link" type="button" data-back-forum>← Back</button>
+        <section class="comments">
+            <h2>Reports</h2>
+            <p class="builder-status">Loading reports...</p>
+        </section>
+    `;
+    els.thread.querySelector("[data-back-forum]").addEventListener("click", loadThreads);
+
+    const { data, error } = await client
+        .from("forum_reports")
+        .select("id,thread_id,comment_id,reason,status,username,created_at")
+        .eq("status", "open")
+        .order("created_at", { ascending: false });
+    if (error) {
+        els.thread.querySelector(".comments").innerHTML = `<h2>Reports</h2><p class="builder-status">${escapeHtml(friendlyError(error))}</p>`;
+        return;
+    }
+    const reports = data || [];
+    els.thread.querySelector(".comments").innerHTML = `
+        <h2>Reports</h2>
+        <div class="comment-list">
+            ${reports.length ? reports.map(renderReport).join("") : '<p class="builder-status">No open reports.</p>'}
+        </div>
+    `;
+    els.thread.querySelectorAll("[data-open-report-thread]").forEach((button) => {
+        button.addEventListener("click", () => openThread(button.dataset.openReportThread));
+    });
+    els.thread.querySelectorAll("[data-dismiss-report]").forEach((button) => {
+        button.addEventListener("click", () => dismissReport(button.dataset.dismissReport));
+    });
+}
+
+function renderReport(report) {
+    const target = report.comment_id ? "Comment" : "Forum post";
+    return `
+        <article class="comment report-card">
+            <div></div>
+            <div>
+                <div class="forum-meta">${target} report · ${escapeHtml(report.username || "Contributor")} · ${formatDate(report.created_at)}</div>
+                <p>${escapeHtml(report.reason)}</p>
+                <div class="admin-post-actions">
+                    ${report.thread_id ? `<button type="button" data-open-report-thread="${report.thread_id}">Open post</button>` : ""}
+                    <button type="button" data-dismiss-report="${report.id}">Dismiss</button>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+async function dismissReport(id) {
+    const { error } = await client
+        .from("forum_reports")
+        .update({ status: "dismissed", updated_at: new Date().toISOString() })
+        .eq("id", id);
+    if (error) {
+        setStatus(friendlyError(error));
+        return;
+    }
+    await openReports();
+}
+
 async function submitThread(event) {
     event.preventDefault();
     if (!state.session) {
         window.location.href = "../admin/";
+        return;
+    }
+    if (!isEmailConfirmed()) {
+        els.composeStatus.textContent = "Confirm your email before posting.";
         return;
     }
     const title = els.title.value.trim();
@@ -538,6 +682,10 @@ async function notifyNewForumPost(payload, id) {
 
 function openComposer() {
     if (!state.session) {
+        window.location.href = "../admin/";
+        return;
+    }
+    if (!isEmailConfirmed()) {
         window.location.href = "../admin/";
         return;
     }

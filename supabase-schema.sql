@@ -60,6 +60,19 @@ create table if not exists public.forum_comment_votes (
   primary key (comment_id, user_id)
 );
 
+create table if not exists public.forum_reports (
+  id uuid primary key default gen_random_uuid(),
+  thread_id uuid references public.forum_threads(id) on delete cascade,
+  comment_id uuid references public.forum_comments(id) on delete cascade,
+  reason text not null,
+  status text not null default 'open' check (status in ('open', 'reviewed', 'dismissed')),
+  created_by uuid references auth.users(id) on delete set null default auth.uid(),
+  username text not null default 'Contributor',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (thread_id is not null or comment_id is not null)
+);
+
 create or replace view public.forum_comments_with_scores as
 select
   c.id,
@@ -205,6 +218,7 @@ alter table public.profiles enable row level security;
 alter table public.forum_threads enable row level security;
 alter table public.forum_comments enable row level security;
 alter table public.forum_comment_votes enable row level security;
+alter table public.forum_reports enable row level security;
 
 drop policy if exists "Profiles are readable" on public.profiles;
 create policy "Profiles are readable"
@@ -280,11 +294,40 @@ with check (created_by = auth.uid() or public.is_admin());
 
 drop policy if exists "Contributors delete own comments or admin deletes all" on public.forum_comments;
 drop policy if exists "Signed in users delete comments" on public.forum_comments;
-create policy "Signed in users delete comments"
+create policy "Contributors delete own comments or admin deletes all"
 on public.forum_comments
 for delete
 to authenticated
-using (auth.uid() is not null);
+using (created_by = auth.uid() or public.is_admin());
+
+drop policy if exists "Contributors create reports" on public.forum_reports;
+create policy "Contributors create reports"
+on public.forum_reports
+for insert
+to authenticated
+with check (created_by = auth.uid());
+
+drop policy if exists "Admins read reports" on public.forum_reports;
+create policy "Admins read reports"
+on public.forum_reports
+for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "Admins update reports" on public.forum_reports;
+create policy "Admins update reports"
+on public.forum_reports
+for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Admins delete reports" on public.forum_reports;
+create policy "Admins delete reports"
+on public.forum_reports
+for delete
+to authenticated
+using (public.is_admin());
 
 drop policy if exists "Forum votes are public" on public.forum_comment_votes;
 create policy "Forum votes are public"

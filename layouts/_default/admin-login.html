@@ -3,7 +3,7 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Sign in or sign up to contribute to the forum.</p>
+        <p>Sign in or sign up to contribute to the forum. Use a unique password and confirm your email before posting.</p>
     </div>
 </section>
 
@@ -21,7 +21,7 @@
     <div class="role-guide">
         <div>
             <strong>Contributor</strong>
-            <span>Every signed-in account can create forum posts, comment, and vote.</span>
+            <span>Every confirmed account can create forum posts, comment, vote, and report content.</span>
         </div>
         <div>
             <strong>Admin</strong>
@@ -40,7 +40,7 @@
         </label>
         <label>
             <span>Password</span>
-            <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" required>
+            <input id="login-password" type="password" autocomplete="current-password" minlength="10" placeholder="Password" required>
         </label>
         <div class="builder-actions">
             <button type="submit" id="login-submit-button">Sign in</button>

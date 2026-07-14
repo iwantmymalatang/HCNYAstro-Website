@@ -1253,6 +1253,10 @@ h1 {
     background: #090a13;
 }
 
+.report-card {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
 .reply-form {
     display: grid;
     gap: 10px;
@@ -1427,6 +1431,14 @@ h1 {
     .forum-settings-panel {
         width: 100%;
         grid-template-columns: 1fr;
+    }
+
+    .comment-thread {
+        margin-left: calc(var(--reply-depth, 0) * 10px);
+    }
+
+    .comment-replies {
+        padding-left: 10px;
     }
 
     .hero h1 {

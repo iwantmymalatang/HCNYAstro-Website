@@ -23,7 +23,7 @@ const copy = {
     },
     signup: {
         title: "Sign up",
-        text: "Create one account to post, comment, and vote. Use a unique password and confirm your email after signing up.",
+        text: "Create one account to post, comment, and vote. Use a unique password. If email confirmation is enabled, check your inbox after signing up.",
         submit: "Create account",
         autocomplete: "new-password",
     },
@@ -37,6 +37,22 @@ function passwordIssue(value) {
     if (!/[^A-Za-z0-9]/.test(value)) return "Add a symbol.";
     if (/password|qwerty|123456|hcny|astro/i.test(value)) return "Avoid common or site-related words.";
     return "";
+}
+
+function authErrorMessage(error) {
+    const message = error?.message || String(error || "");
+    const lower = message.toLowerCase();
+    if (lower.includes("rate") && lower.includes("email")) {
+        return "Supabase email limit reached. Try again later, or ask the admin to enable custom SMTP in Supabase Authentication settings.";
+    }
+    if (lower.includes("email rate limit")) {
+        return "Supabase email limit reached. Try again later, or ask the admin to enable custom SMTP in Supabase Authentication settings.";
+    }
+    return message;
+}
+
+function destinationForEmail(email) {
+    return String(email || "").toLowerCase() === "hcnyastro@gmail.com" ? adminUrl : editorUrl;
 }
 
 function setMode(mode) {
@@ -60,8 +76,7 @@ async function init() {
 
     const { data } = await client.auth.getSession();
     if (data.session) {
-        const signedInEmail = result.data.user?.email || email;
-        window.location.href = signedInEmail.toLowerCase() === "hcnyastro@gmail.com" ? adminUrl : editorUrl;
+        window.location.href = destinationForEmail(data.session.user?.email);
         return;
     }
 
@@ -86,7 +101,7 @@ async function init() {
             ? await client.auth.signUp({ email, password: loginPassword })
             : await client.auth.signInWithPassword({ email, password: loginPassword });
         if (result.error) {
-            status.textContent = result.error.message;
+            status.textContent = authErrorMessage(result.error);
             return;
         }
         if (mode === "signup" && !result.data.user?.email_confirmed_at) {
@@ -94,7 +109,7 @@ async function init() {
             status.textContent = "Account created. Confirm your email, then come back and sign in.";
             return;
         }
-        window.location.href = editorUrl;
+        window.location.href = destinationForEmail(result.data.user?.email || email);
     });
 
     setMode("signin");

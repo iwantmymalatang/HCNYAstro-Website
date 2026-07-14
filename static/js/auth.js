@@ -48,11 +48,22 @@ function authErrorMessage(error) {
     if (lower.includes("email rate limit")) {
         return "Supabase email limit reached. Try again later, or ask the admin to enable custom SMTP in Supabase Authentication settings.";
     }
+    if (lower.includes("smtp") || lower.includes("email provider") || lower.includes("failed to send")) {
+        return "Supabase could not send the email. Check custom SMTP settings: host, port 587, username, app password, sender address, and sender name.";
+    }
     return message;
 }
 
 function destinationForEmail(email) {
     return String(email || "").toLowerCase() === "hcnyastro@gmail.com" ? adminUrl : editorUrl;
+}
+
+function withTimeout(promise, milliseconds, message) {
+    let timeoutId;
+    const timeout = new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(message)), milliseconds);
+    });
+    return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
 }
 
 function setMode(mode) {
@@ -97,9 +108,22 @@ async function init() {
             }
         }
         status.textContent = mode === "signup" ? "Creating account..." : "Signing in...";
-        const result = mode === "signup"
-            ? await client.auth.signUp({ email, password: loginPassword })
-            : await client.auth.signInWithPassword({ email, password: loginPassword });
+        submitButton.disabled = true;
+        let result;
+        try {
+            result = await withTimeout(
+                mode === "signup"
+                    ? client.auth.signUp({ email, password: loginPassword })
+                    : client.auth.signInWithPassword({ email, password: loginPassword }),
+                20000,
+                "Supabase did not respond after 20 seconds. If you just enabled custom SMTP, check the SMTP host, port, username, password, sender address, and Supabase Auth logs."
+            );
+        } catch (error) {
+            status.textContent = authErrorMessage(error);
+            submitButton.disabled = false;
+            return;
+        }
+        submitButton.disabled = false;
         if (result.error) {
             status.textContent = authErrorMessage(result.error);
             return;

@@ -165,7 +165,7 @@ async function renderAccount() {
         <button type="button" id="forum-new-post">New post</button>
         <span>${escapeHtml(displayName())}</span>
         ${state.profile?.role === "admin" ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
-        <button type="button" id="forum-settings">Settings</button>
+        <button type="button" id="forum-settings">Change username</button>
         <button type="button" id="forum-logout">Log out</button>
     `;
     document.getElementById("forum-new-post").addEventListener("click", openComposer);

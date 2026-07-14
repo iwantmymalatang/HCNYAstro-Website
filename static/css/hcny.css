@@ -946,6 +946,20 @@ h1 {
     padding-bottom: 96px;
 }
 
+.forum-app .post-card,
+.forum-app .single-card,
+.forum-app .comment-form,
+.forum-app .comment {
+    background-color: #090a13 !important;
+    backdrop-filter: none !important;
+}
+
+.forum-app input,
+.forum-app select,
+.forum-app textarea {
+    background-color: #121421 !important;
+}
+
 .forum-toolbar {
     display: flex;
     justify-content: space-between;

@@ -13,7 +13,9 @@ foreign key (parent_id)
 references public.forum_comments(id)
 on delete cascade;
 
-create or replace view public.forum_comments_with_scores as
+drop view if exists public.forum_comments_with_scores;
+
+create view public.forum_comments_with_scores as
 select
   c.id,
   c.thread_id,

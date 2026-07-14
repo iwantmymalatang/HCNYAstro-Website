@@ -73,7 +73,8 @@ create table if not exists public.forum_reports (
   check (thread_id is not null or comment_id is not null)
 );
 
-create or replace view public.forum_comments_with_scores as
+drop view if exists public.forum_comments_with_scores;
+create view public.forum_comments_with_scores as
 select
   c.id,
   c.thread_id,

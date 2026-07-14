@@ -221,6 +221,9 @@ async function renderAccount() {
 
 function friendlyError(error) {
     const message = error?.message || String(error || "");
+    if (message.includes("parent_id")) {
+        return "Reply threads are not set up in Supabase yet. Run supabase-add-comment-replies.sql in Supabase SQL Editor, then refresh.";
+    }
     if (message.includes("forum_threads") || message.includes("forum_comments") || message.includes("does not exist")) {
         return "Forum database is not set up yet. Run the latest supabase-schema.sql in Supabase SQL Editor, then refresh this page.";
     }
@@ -460,7 +463,7 @@ async function submitComment(event, parentId = null) {
     if (parentId) payload.parent_id = parentId;
     const { error } = await client.from("forum_comments").insert(payload);
     if (error) {
-        status.textContent = error.message;
+        status.textContent = friendlyError(error);
         return;
     }
     await renderSelectedThread();

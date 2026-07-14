@@ -1,7 +1,17 @@
 -- Run this once in Supabase SQL Editor to enable comment reply threads.
+-- This version is safe to run more than once.
 
 alter table public.forum_comments
-add column if not exists parent_id uuid references public.forum_comments(id) on delete cascade;
+add column if not exists parent_id uuid;
+
+alter table public.forum_comments
+drop constraint if exists forum_comments_parent_id_fkey;
+
+alter table public.forum_comments
+add constraint forum_comments_parent_id_fkey
+foreign key (parent_id)
+references public.forum_comments(id)
+on delete cascade;
 
 create or replace view public.forum_comments_with_scores as
 select

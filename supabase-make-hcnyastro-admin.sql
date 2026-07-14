@@ -1,6 +1,12 @@
 -- Run this in Supabase SQL Editor after hcnyastro@gmail.com has signed up once.
 -- It makes hcnyastro@gmail.com the only admin and keeps everyone else as contributor.
 
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists username text;
+alter table public.profiles add column if not exists role text not null default 'contributor';
+alter table public.profiles add column if not exists notifications_enabled boolean not null default true;
+alter table public.profiles add column if not exists updated_at timestamptz not null default now();
+
 insert into public.profiles (id, email, username, role, notifications_enabled)
 select
   id,

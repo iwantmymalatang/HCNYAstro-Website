@@ -1027,6 +1027,11 @@ h1 {
     box-shadow: 0 26px 90px rgba(0, 0, 0, 0.72);
 }
 
+.forum-compose:not(.is-open),
+.forum-settings-panel:not(.is-open) {
+    display: none !important;
+}
+
 .forum-settings-panel {
     position: fixed;
     z-index: 60;

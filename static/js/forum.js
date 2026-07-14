@@ -112,6 +112,7 @@ function resetCompose() {
     els.composeStatus.textContent = "";
     els.postingAs.textContent = state.session ? `Posting as ${displayName()}` : "";
     els.compose.hidden = true;
+    els.compose.classList.remove("is-open");
 }
 
 function setStatus(message) {
@@ -378,6 +379,7 @@ function editThread(thread) {
     els.submit.textContent = "Save forum post";
     els.cancelEdit.textContent = "Close";
     els.compose.hidden = false;
+    els.compose.classList.add("is-open");
     els.postingAs.textContent = `Editing as ${displayName()}`;
 }
 
@@ -449,7 +451,9 @@ function openComposer() {
     }
     resetCompose();
     els.compose.hidden = false;
+    els.compose.classList.add("is-open");
     els.settingsPanel.hidden = true;
+    els.settingsPanel.classList.remove("is-open");
     els.thread.hidden = true;
     els.postingAs.textContent = `Posting as ${displayName()}`;
 }
@@ -460,8 +464,10 @@ function openSettings() {
         return;
     }
     els.compose.hidden = true;
+    els.compose.classList.remove("is-open");
     els.thread.hidden = true;
     els.settingsPanel.hidden = false;
+    els.settingsPanel.classList.add("is-open");
     els.settingsUsername.value = displayName();
     els.settingsStatus.textContent = "";
     els.settingsUsername.focus();
@@ -483,10 +489,12 @@ async function submitSettings(event) {
     await refreshProfile();
     await renderAccount();
     els.settingsPanel.hidden = true;
+    els.settingsPanel.classList.remove("is-open");
 }
 
 function closePostPanels() {
     els.settingsPanel.hidden = true;
+    els.settingsPanel.classList.remove("is-open");
     resetCompose();
 }
 

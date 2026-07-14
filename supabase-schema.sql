@@ -40,12 +40,16 @@ create table if not exists public.forum_threads (
 create table if not exists public.forum_comments (
   id uuid primary key default gen_random_uuid(),
   thread_id uuid not null references public.forum_threads(id) on delete cascade,
+  parent_id uuid references public.forum_comments(id) on delete cascade,
   body text not null,
   username text not null default 'Contributor',
   created_by uuid references auth.users(id) on delete set null default auth.uid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.forum_comments
+add column if not exists parent_id uuid references public.forum_comments(id) on delete cascade;
 
 create table if not exists public.forum_comment_votes (
   comment_id uuid not null references public.forum_comments(id) on delete cascade,
@@ -60,6 +64,7 @@ create or replace view public.forum_comments_with_scores as
 select
   c.id,
   c.thread_id,
+  c.parent_id,
   c.body,
   c.username,
   c.created_by,

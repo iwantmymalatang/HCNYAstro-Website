@@ -279,10 +279,33 @@ async function fetchComments(threadId) {
         .from("forum_comments_with_scores")
         .select("*")
         .eq("thread_id", threadId)
-        .order("score", { ascending: false })
         .order("created_at", { ascending: true });
     if (error) throw new Error(friendlyError(error));
     return data || [];
+}
+
+function sortTopComments(comments) {
+    return [...comments].sort((a, b) => {
+        const scoreDiff = (b.score || 0) - (a.score || 0);
+        if (scoreDiff) return scoreDiff;
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
+}
+
+function groupReplies(comments) {
+    return comments.reduce((groups, comment) => {
+        const key = comment.parent_id || "root";
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(comment);
+        return groups;
+    }, new Map());
+}
+
+function renderCommentTree(comments) {
+    const groups = groupReplies(comments);
+    const topLevel = sortTopComments(groups.get("root") || []);
+    if (!topLevel.length) return '<p class="builder-status">No comments yet.</p>';
+    return topLevel.map((comment) => renderComment(comment, groups, 0)).join("");
 }
 
 async function renderSelectedThread() {
@@ -316,7 +339,7 @@ async function renderSelectedThread() {
             <h2>Comments</h2>
             ${commentForm}
             <div class="comment-list">
-                ${comments.length ? comments.map(renderComment).join("") : '<p class="builder-status">No comments yet.</p>'}
+                ${renderCommentTree(comments)}
             </div>
         </section>
     `;
@@ -331,36 +354,65 @@ async function renderSelectedThread() {
     els.thread.querySelectorAll("[data-delete-comment]").forEach((button) => {
         button.addEventListener("click", () => deleteComment(button.dataset.deleteComment));
     });
+    els.thread.querySelectorAll("[data-reply-comment]").forEach((button) => {
+        button.addEventListener("click", () => toggleReplyForm(button.dataset.replyComment));
+    });
+    els.thread.querySelectorAll("[data-reply-form]").forEach((form) => {
+        form.addEventListener("submit", (event) => submitComment(event, form.dataset.replyForm));
+    });
 }
 
-function renderComment(comment) {
+function renderComment(comment, groups, depth) {
+    const replies = (groups.get(comment.id) || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     const actions = state.session
-        ? `<button type="button" data-delete-comment="${comment.id}">Delete</button>`
+        ? `<button type="button" data-reply-comment="${comment.id}">Reply</button><button type="button" data-delete-comment="${comment.id}">Delete</button>`
+        : "";
+    const replyForm = state.session
+        ? `<form class="reply-form" data-reply-form="${comment.id}" hidden>
+                <textarea name="comment-body" rows="3" placeholder="Reply to ${escapeHtml(comment.username || "Contributor")}..." required></textarea>
+                <div class="builder-actions">
+                    <button type="submit">Reply</button>
+                </div>
+                <p class="builder-status" data-reply-status></p>
+            </form>`
         : "";
     return `
-        <article class="comment">
-            <div class="comment-votes">
-                <button type="button" data-vote-comment="${comment.id}" data-vote-value="1">▲</button>
-                <strong>${comment.score || 0}</strong>
-                <button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>
-            </div>
-            <div>
-                <div class="forum-meta">${escapeHtml(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
-                <p>${escapeHtml(comment.body)}</p>
-                <div class="admin-post-actions">${actions}</div>
-            </div>
-        </article>
+        <div class="comment-thread" style="--reply-depth: ${Math.min(depth, 5)}">
+            <article class="comment">
+                <div class="comment-votes">
+                    <button type="button" data-vote-comment="${comment.id}" data-vote-value="1">▲</button>
+                    <strong>${comment.score || 0}</strong>
+                    <button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>
+                </div>
+                <div>
+                    <div class="forum-meta">${escapeHtml(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
+                    <p>${escapeHtml(comment.body)}</p>
+                    <div class="admin-post-actions">${actions}</div>
+                    ${replyForm}
+                </div>
+            </article>
+            ${replies.length ? `<div class="comment-replies">${replies.map((reply) => renderComment(reply, groups, depth + 1)).join("")}</div>` : ""}
+        </div>
     `;
 }
 
-async function submitComment(event) {
+function toggleReplyForm(commentId) {
+    const form = els.thread.querySelector(`[data-reply-form="${CSS.escape(commentId)}"]`);
+    if (!form) return;
+    form.hidden = !form.hidden;
+    if (!form.hidden) form.querySelector("textarea")?.focus();
+}
+
+async function submitComment(event, parentId = null) {
     event.preventDefault();
-    const status = document.getElementById("comment-status");
-    const body = document.getElementById("comment-body").value.trim();
+    const form = event.currentTarget;
+    const status = form.querySelector("[data-reply-status]") || document.getElementById("comment-status");
+    const body = form.querySelector('[name="comment-body"], #comment-body')?.value.trim();
     if (!body) return;
     status.textContent = "Saving comment...";
     const { error } = await client.from("forum_comments").insert({
         thread_id: state.selectedThread.id,
+        parent_id: parentId,
         body,
         username: displayName(),
     });

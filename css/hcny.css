@@ -1230,6 +1230,19 @@ h1 {
     gap: 10px;
 }
 
+.comment-thread {
+    display: grid;
+    gap: 10px;
+    margin-left: calc(var(--reply-depth, 0) * 22px);
+}
+
+.comment-replies {
+    display: grid;
+    gap: 10px;
+    padding-left: 18px;
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
 .comment {
     display: grid;
     grid-template-columns: 46px minmax(0, 1fr);
@@ -1238,6 +1251,25 @@ h1 {
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 18px;
     background: #090a13;
+}
+
+.reply-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.reply-form textarea {
+    width: 100%;
+    min-height: 96px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    background: #121421;
+    color: #ffffff;
+    font: inherit;
+    resize: vertical;
+    outline: none;
 }
 
 .comment p {

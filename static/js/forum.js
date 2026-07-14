@@ -117,6 +117,10 @@ function canDeleteComment(comment) {
     return isAdmin() || comment.created_by === state.session?.user?.id;
 }
 
+function canDeleteThread(thread) {
+    return isAdmin() || thread.created_by === state.session?.user?.id;
+}
+
 function displayName() {
     return state.profile?.username || state.session?.user?.email?.split("@")[0] || "Contributor";
 }
@@ -341,9 +345,10 @@ function renderCommentTree(comments) {
 async function renderSelectedThread() {
     const thread = state.selectedThread;
     const comments = await fetchComments(thread.id);
-    const actions = canEdit(thread)
-        ? `<button type="button" data-edit-thread>Edit</button>${isAdmin() ? '<button type="button" data-delete-thread>Delete</button>' : ""}`
-        : "";
+    const actions = [
+        canEdit(thread) ? '<button type="button" data-edit-thread>Edit</button>' : "",
+        canDeleteThread(thread) ? '<button type="button" data-delete-thread>Delete</button>' : "",
+    ].join("");
     const reportThreadAction = state.session
         ? '<button type="button" data-report-thread>Report</button>'
         : "";

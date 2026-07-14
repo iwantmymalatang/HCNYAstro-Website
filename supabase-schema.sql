@@ -266,11 +266,11 @@ with check (created_by = auth.uid() or public.is_admin());
 
 drop policy if exists "Contributors delete own threads or admin deletes all" on public.forum_threads;
 drop policy if exists "Admin deletes forum threads" on public.forum_threads;
-create policy "Admin deletes forum threads"
+create policy "Contributors delete own threads or admin deletes all"
 on public.forum_threads
 for delete
 to authenticated
-using (public.is_admin());
+using (created_by = auth.uid() or public.is_admin());
 
 drop policy if exists "Forum comments are public" on public.forum_comments;
 create policy "Forum comments are public"

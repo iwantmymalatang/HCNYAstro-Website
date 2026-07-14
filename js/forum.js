@@ -22,9 +22,10 @@ const els = {
     status: document.getElementById("forum-status"),
     list: document.getElementById("forum-list"),
     thread: document.getElementById("forum-thread"),
+    newPost: document.getElementById("forum-new-post"),
     editId: document.getElementById("forum-edit-id"),
     type: document.getElementById("forum-type"),
-    username: document.getElementById("forum-username"),
+    postingAs: document.getElementById("forum-posting-as"),
     title: document.getElementById("forum-title"),
     tags: document.getElementById("forum-tags"),
     body: document.getElementById("forum-body"),
@@ -94,14 +95,19 @@ function canEdit(row) {
     return state.profile?.role === "admin" || row.created_by === state.session?.user?.id;
 }
 
+function displayName() {
+    return state.profile?.username || state.session?.user?.email?.split("@")[0] || "Contributor";
+}
+
 function resetCompose() {
     els.compose.reset();
     els.editId.value = "";
     els.type.value = state.tab;
-    els.username.value = state.profile?.username || "";
     els.submit.textContent = "Publish to forum";
     els.cancelEdit.hidden = true;
     els.composeStatus.textContent = "";
+    els.postingAs.textContent = state.session ? `Posting as ${displayName()}` : "";
+    els.compose.hidden = true;
 }
 
 function setStatus(message) {
@@ -139,18 +145,24 @@ async function renderAccount() {
     }
 
     if (!state.session) {
-        els.account.innerHTML = '<a class="read-link" href="../admin/">Sign in to contribute</a>';
+        els.account.innerHTML = `
+            <button type="button" id="forum-new-post">New post</button>
+            <a class="read-link" href="../admin/">Sign in</a>
+        `;
+        document.getElementById("forum-new-post").addEventListener("click", () => {
+            window.location.href = "../admin/";
+        });
         els.compose.hidden = true;
         return;
     }
 
-    els.compose.hidden = false;
-    els.username.value = state.profile?.username || state.session.user.email?.split("@")[0] || "";
     els.account.innerHTML = `
-        <span>${escapeHtml(state.profile?.username || state.session.user.email)}</span>
+        <button type="button" id="forum-new-post">New post</button>
+        <span>${escapeHtml(displayName())}</span>
         ${state.profile?.role === "admin" ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
         <button type="button" id="forum-logout">Log out</button>
     `;
+    document.getElementById("forum-new-post").addEventListener("click", openComposer);
     document.getElementById("forum-logout").addEventListener("click", async () => {
         await client.auth.signOut();
         state.session = null;
@@ -158,6 +170,14 @@ async function renderAccount() {
         await renderAccount();
         await loadThreads();
     });
+}
+
+function friendlyError(error) {
+    const message = error?.message || String(error || "");
+    if (message.includes("forum_threads") || message.includes("forum_comments") || message.includes("does not exist")) {
+        return "Forum database is not set up yet. Run the latest supabase-schema.sql in Supabase SQL Editor, then refresh this page.";
+    }
+    return message;
 }
 
 async function loadThreads() {
@@ -176,7 +196,7 @@ async function loadThreads() {
 
     if (error) {
         els.list.innerHTML = "";
-        setStatus(error.message);
+        setStatus(friendlyError(error));
         return;
     }
 
@@ -186,6 +206,7 @@ async function loadThreads() {
 }
 
 function renderThreadList() {
+    els.thread.hidden = true;
     if (!state.threads.length) {
         els.list.innerHTML = `<p class="builder-status">No ${state.tab === "guide" ? "guides" : "questions"} yet.</p>`;
         return;
@@ -209,13 +230,14 @@ function renderThreadList() {
 }
 
 async function openThread(id) {
+    els.compose.hidden = true;
     const { data, error } = await client
         .from("forum_threads")
         .select("*")
         .eq("id", id)
         .single();
     if (error) {
-        setStatus(error.message);
+        setStatus(friendlyError(error));
         return;
     }
 
@@ -232,7 +254,7 @@ async function fetchComments(threadId) {
         .eq("thread_id", threadId)
         .order("score", { ascending: false })
         .order("created_at", { ascending: true });
-    if (error) throw error;
+    if (error) throw new Error(friendlyError(error));
     return data || [];
 }
 
@@ -245,7 +267,7 @@ async function renderSelectedThread() {
     const commentForm = state.session
         ? `<form class="comment-form" id="comment-form">
                 <label>
-                    <span>Comment as ${escapeHtml(state.profile?.username || "Contributor")}</span>
+                    <span>Comment as ${escapeHtml(displayName())}</span>
                     <textarea id="comment-body" rows="4" placeholder="Add a comment..." required></textarea>
                 </label>
                 <div class="builder-actions"><button type="submit">Comment</button></div>
@@ -313,7 +335,7 @@ async function submitComment(event) {
     const { error } = await client.from("forum_comments").insert({
         thread_id: state.selectedThread.id,
         body,
-        username: state.profile?.username || els.username.value.trim() || "Contributor",
+        username: displayName(),
     });
     if (error) {
         status.textContent = error.message;
@@ -342,13 +364,13 @@ async function voteComment(commentId, value) {
 function editThread(thread) {
     els.editId.value = thread.id;
     els.type.value = thread.type;
-    els.username.value = thread.username || state.profile?.username || "";
     els.title.value = thread.title || "";
     els.tags.value = normalizeTags(thread.tags).join(", ");
     els.body.value = thread.body || "";
     els.submit.textContent = "Save forum post";
     els.cancelEdit.hidden = false;
     els.compose.hidden = false;
+    els.postingAs.textContent = `Editing as ${displayName()}`;
     els.compose.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -390,7 +412,7 @@ async function submitThread(event) {
         slug: `${slugify(title)}-${Date.now().toString(36)}`,
         body,
         tags: normalizeTags(els.tags.value),
-        username: els.username.value.trim() || state.profile?.username || "Contributor",
+        username: displayName(),
         updated_at: new Date().toISOString(),
     };
 
@@ -401,17 +423,28 @@ async function submitThread(event) {
         result = await client.from("forum_threads").insert(payload).select("id").single();
     }
     if (result.error) {
-        els.composeStatus.textContent = result.error.message;
+        els.composeStatus.textContent = friendlyError(result.error);
         return;
     }
 
-    await client.from("profiles").update({ username: payload.username }).eq("id", state.session.user.id);
     state.tab = payload.type;
     await refreshProfile();
     resetCompose();
     await renderAccount();
     await loadThreads();
     if (result.data?.id) await openThread(result.data.id);
+}
+
+function openComposer() {
+    if (!state.session) {
+        window.location.href = "../admin/";
+        return;
+    }
+    resetCompose();
+    els.compose.hidden = false;
+    els.thread.hidden = true;
+    els.postingAs.textContent = `Posting as ${displayName()}`;
+    els.compose.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function init() {

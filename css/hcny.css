@@ -1005,8 +1005,20 @@ h1 {
     font-weight: 800;
 }
 
+.forum-account #forum-new-post {
+    color: #03040a;
+    background: #ffffff;
+    border-color: #ffffff;
+}
+
 .forum-compose {
     max-width: none;
+}
+
+.forum-posting-as {
+    margin: 0;
+    color: var(--muted);
+    font-weight: 750;
 }
 
 .forum-list {

@@ -16,7 +16,9 @@
             <button type="button" class="is-active" data-forum-tab="guide">Guides and Documentation</button>
             <button type="button" data-forum-tab="question">Questions</button>
         </div>
-        <div class="forum-account" id="forum-account"></div>
+        <div class="forum-account" id="forum-account">
+            <button type="button" id="forum-new-post">New post</button>
+        </div>
     </div>
 
     <form class="post-form forum-compose" id="forum-compose" hidden>
@@ -25,19 +27,14 @@
             <button type="button" id="forum-cancel-edit" hidden>Cancel edit</button>
         </div>
         <input id="forum-edit-id" type="hidden">
-        <div class="form-grid">
-            <label>
-                <span>Type</span>
-                <select id="forum-type">
-                    <option value="guide">Guides and Documentation</option>
-                    <option value="question">Questions</option>
-                </select>
-            </label>
-            <label>
-                <span>Username</span>
-                <input id="forum-username" type="text" placeholder="Your display name" autocomplete="nickname" required>
-            </label>
-        </div>
+        <p class="forum-posting-as" id="forum-posting-as"></p>
+        <label>
+            <span>Type</span>
+            <select id="forum-type">
+                <option value="guide">Guides and Documentation</option>
+                <option value="question">Questions</option>
+            </select>
+        </label>
         <label>
             <span>Title</span>
             <input id="forum-title" type="text" placeholder="AstroChallenge preparation notes" autocomplete="off" required>

@@ -23,12 +23,16 @@
 
     <form class="forum-settings-panel" id="forum-settings-panel" hidden>
         <div class="image-helper-head">
-            <span>Change username</span>
+            <span>My settings</span>
             <button type="button" id="forum-settings-close">Close</button>
         </div>
         <label>
             <span>Username</span>
             <input id="forum-settings-username" type="text" autocomplete="nickname" placeholder="Display name">
+        </label>
+        <label class="toggle-row">
+            <input id="forum-settings-notifications" type="checkbox">
+            <span>Email me when new forum posts are published</span>
         </label>
         <button type="submit">Save</button>
         <p class="builder-status" id="forum-settings-status"></p>

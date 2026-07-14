@@ -4,6 +4,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text unique,
   username text,
+  notifications_enabled boolean not null default true,
   role text not null default 'contributor' check (role in ('contributor', 'admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -20,6 +21,7 @@ where lower(coalesce(email, '')) <> 'hcnyastro@gmail.com'
 alter table public.profiles alter column role set default 'contributor';
 alter table public.profiles add constraint profiles_role_check check (role in ('contributor', 'admin'));
 alter table public.profiles add column if not exists username text;
+alter table public.profiles add column if not exists notifications_enabled boolean not null default true;
 alter table public.profiles add column if not exists updated_at timestamptz not null default now();
 
 create table if not exists public.forum_threads (
@@ -211,7 +213,14 @@ on public.profiles
 for update
 to authenticated
 using (id = auth.uid())
-with check (id = auth.uid() and role in ('contributor', 'admin'));
+with check (
+  id = auth.uid()
+  and role in ('contributor', 'admin')
+  and (
+    lower(email) = 'hcnyastro@gmail.com'
+    or role = 'contributor'
+  )
+);
 
 drop policy if exists "Forum threads are public" on public.forum_threads;
 create policy "Forum threads are public"

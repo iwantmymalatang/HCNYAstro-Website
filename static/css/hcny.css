@@ -1079,6 +1079,26 @@ h1 {
     outline: none;
 }
 
+.forum-settings-panel .toggle-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.forum-settings-panel .toggle-row input {
+    width: 18px;
+    min-height: 18px;
+    accent-color: var(--accent);
+}
+
+.forum-settings-panel .toggle-row span {
+    letter-spacing: 0;
+    text-transform: none;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
 .forum-settings-panel button {
     min-height: 42px;
     padding: 0 14px;

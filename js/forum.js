@@ -25,6 +25,7 @@ const els = {
     newPost: document.getElementById("forum-new-post"),
     settingsPanel: document.getElementById("forum-settings-panel"),
     settingsUsername: document.getElementById("forum-settings-username"),
+    settingsNotifications: document.getElementById("forum-settings-notifications"),
     settingsStatus: document.getElementById("forum-settings-status"),
     settingsClose: document.getElementById("forum-settings-close"),
     editId: document.getElementById("forum-edit-id"),
@@ -128,7 +129,7 @@ async function refreshProfile() {
 
     const { data, error } = await client
         .from("profiles")
-        .select("id,email,username,role")
+        .select("id,email,username,role,notifications_enabled")
         .eq("id", state.session.user.id)
         .single();
     if (error) {
@@ -137,6 +138,7 @@ async function refreshProfile() {
             email: state.session.user.email,
             username: state.session.user.email?.split("@")[0] || "Contributor",
             role: "contributor",
+            notifications_enabled: true,
         };
         return;
     }
@@ -165,7 +167,7 @@ async function renderAccount() {
         <button type="button" id="forum-new-post">New post</button>
         <span>${escapeHtml(displayName())}</span>
         ${state.profile?.role === "admin" ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
-        <button type="button" id="forum-settings">Change username</button>
+        <button type="button" id="forum-settings">My settings</button>
         <button type="button" id="forum-logout">Log out</button>
     `;
     document.getElementById("forum-new-post").addEventListener("click", openComposer);
@@ -210,6 +212,10 @@ async function loadThreads() {
     state.threads = data || [];
     setStatus("");
     renderThreadList();
+    const threadId = new URLSearchParams(window.location.search).get("thread");
+    if (threadId && !state.selectedThread) {
+        await openThread(threadId);
+    }
 }
 
 function renderThreadList() {
@@ -426,6 +432,7 @@ async function submitThread(event) {
     };
 
     let result;
+    const isNewThread = !els.editId.value;
     if (els.editId.value) {
         result = await client.from("forum_threads").update(payload).eq("id", els.editId.value).select("id").single();
     } else {
@@ -441,7 +448,28 @@ async function submitThread(event) {
     resetCompose();
     await renderAccount();
     await loadThreads();
+    if (isNewThread && result.data?.id) {
+        await notifyNewForumPost(payload, result.data.id);
+    }
     if (result.data?.id) await openThread(result.data.id);
+}
+
+async function notifyNewForumPost(payload, id) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("thread", id);
+    const notification = await client.functions.invoke("notify-new-post", {
+        body: {
+            title: payload.title,
+            summary: payload.body.slice(0, 240),
+            slug: payload.slug,
+            url: url.href,
+            type: payload.type,
+            username: payload.username,
+        },
+    });
+    if (notification.error) {
+        els.composeStatus.textContent = `Saved, but email notification failed: ${notification.data?.error || notification.error.message}`;
+    }
 }
 
 function openComposer() {
@@ -469,6 +497,7 @@ function openSettings() {
     els.settingsPanel.hidden = false;
     els.settingsPanel.classList.add("is-open");
     els.settingsUsername.value = displayName();
+    els.settingsNotifications.checked = state.profile?.notifications_enabled !== false;
     els.settingsStatus.textContent = "";
     els.settingsUsername.focus();
 }
@@ -481,7 +510,13 @@ async function submitSettings(event) {
         return;
     }
     els.settingsStatus.textContent = "Saving...";
-    const { error } = await client.from("profiles").update({ username }).eq("id", state.session.user.id);
+    const { error } = await client
+        .from("profiles")
+        .update({
+            username,
+            notifications_enabled: els.settingsNotifications.checked,
+        })
+        .eq("id", state.session.user.id);
     if (error) {
         els.settingsStatus.textContent = friendlyError(error);
         return;

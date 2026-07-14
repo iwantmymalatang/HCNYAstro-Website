@@ -5,6 +5,8 @@ type NotifyPayload = {
   summary?: string;
   slug?: string;
   url?: string;
+  type?: string;
+  username?: string;
   imageUrl?: string | null;
 };
 
@@ -107,21 +109,22 @@ Deno.serve(async (req) => {
   if (!payload.title || !payload.url) return json({ error: "Title and URL are required" }, 400);
 
   const { data: subscribers, error } = await admin
-    .from("subscribers")
-    .select("email, unsubscribe_token")
-    .eq("active", true);
+    .from("profiles")
+    .select("email")
+    .eq("notifications_enabled", true)
+    .not("email", "is", null);
   if (error) return json({ error: error.message }, 500);
 
-  const siteOrigin = new URL(payload.url).origin;
-  const subject = `New HCNY Astronomy post: ${payload.title}`;
+  const subject = `New HCNY Astronomy forum post: ${payload.title}`;
   const emailResults = [];
   for (const subscriber of subscribers || []) {
-    const unsubscribeUrl = `${siteOrigin}/HCNYAstro-Website/posts/?unsubscribe=${subscriber.unsubscribe_token}`;
     const html = `
       <h1>${payload.title}</h1>
+      ${payload.username ? `<p>Posted by ${payload.username}</p>` : ""}
+      ${payload.type ? `<p>Type: ${payload.type === "guide" ? "Guides and Documentation" : "Questions"}</p>` : ""}
       ${payload.summary ? `<p>${payload.summary}</p>` : ""}
       <p><a href="${payload.url}">Read the post</a></p>
-      <p style="font-size:12px;color:#666"><a href="${unsubscribeUrl}">Unsubscribe</a></p>
+      <p style="font-size:12px;color:#666">Change email notifications from My settings on the HCNY Astronomy forum.</p>
     `;
     emailResults.push(await sendEmail(subscriber.email, subject, html));
   }

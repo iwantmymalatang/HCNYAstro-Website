@@ -23,6 +23,10 @@
     </div>
 
     <form class="forum-key-panel" id="forum-key-panel" hidden>
+        <div class="image-helper-head">
+            <span>Unlock posting</span>
+            <button type="button" id="forum-key-close">Close</button>
+        </div>
         <label>
             <span>Post key</span>
             <input id="forum-post-key" type="password" autocomplete="off" placeholder="Enter key">
@@ -34,7 +38,7 @@
     <form class="post-form forum-compose" id="forum-compose" hidden>
         <div class="image-helper-head">
             <span>New forum post</span>
-            <button type="button" id="forum-cancel-edit" hidden>Cancel edit</button>
+            <button type="button" id="forum-cancel-edit">Close</button>
         </div>
         <input id="forum-edit-id" type="hidden">
         <p class="forum-posting-as" id="forum-posting-as"></p>

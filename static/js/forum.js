@@ -27,6 +27,7 @@ const els = {
     keyPanel: document.getElementById("forum-key-panel"),
     keyInput: document.getElementById("forum-post-key"),
     keyStatus: document.getElementById("forum-key-status"),
+    keyClose: document.getElementById("forum-key-close"),
     editId: document.getElementById("forum-edit-id"),
     type: document.getElementById("forum-type"),
     postingAs: document.getElementById("forum-posting-as"),
@@ -112,7 +113,7 @@ function resetCompose() {
     els.editId.value = "";
     els.type.value = state.tab;
     els.submit.textContent = "Publish to forum";
-    els.cancelEdit.hidden = true;
+    els.cancelEdit.textContent = "Close";
     els.composeStatus.textContent = "";
     els.postingAs.textContent = state.session ? `Posting as ${displayName()}` : "";
     els.compose.hidden = true;
@@ -378,10 +379,9 @@ function editThread(thread) {
     els.tags.value = normalizeTags(thread.tags).join(", ");
     els.body.value = thread.body || "";
     els.submit.textContent = "Save forum post";
-    els.cancelEdit.hidden = false;
+    els.cancelEdit.textContent = "Close";
     els.compose.hidden = false;
     els.postingAs.textContent = `Editing as ${displayName()}`;
-    els.compose.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function deleteThread(id) {
@@ -457,7 +457,6 @@ function openComposer() {
         els.keyInput.value = "";
         els.keyStatus.textContent = "";
         els.keyInput.focus();
-        els.keyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
     }
     resetCompose();
@@ -465,7 +464,6 @@ function openComposer() {
     els.keyPanel.hidden = true;
     els.thread.hidden = true;
     els.postingAs.textContent = `Posting as ${displayName()}`;
-    els.compose.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function submitPostKey(event) {
@@ -477,6 +475,11 @@ function submitPostKey(event) {
     sessionStorage.setItem("forumPostKeyUnlocked", "true");
     els.keyPanel.hidden = true;
     openComposer();
+}
+
+function closePostPanels() {
+    els.keyPanel.hidden = true;
+    resetCompose();
 }
 
 async function init() {
@@ -503,7 +506,8 @@ async function init() {
     });
     els.compose.addEventListener("submit", submitThread);
     els.keyPanel.addEventListener("submit", submitPostKey);
-    els.cancelEdit.addEventListener("click", resetCompose);
+    els.cancelEdit.addEventListener("click", closePostPanels);
+    els.keyClose.addEventListener("click", closePostPanels);
 
     await loadThreads();
 }

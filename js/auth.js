@@ -109,6 +109,11 @@ async function init() {
         }
         status.textContent = mode === "signup" ? "Creating account..." : "Signing in...";
         submitButton.disabled = true;
+        const slowNotice = window.setTimeout(() => {
+            if (mode === "signup") {
+                status.textContent = "Still waiting for Supabase. This usually means the confirmation email or custom SMTP settings are stuck.";
+            }
+        }, 8000);
         let result;
         try {
             result = await withTimeout(
@@ -119,10 +124,12 @@ async function init() {
                 "Supabase did not respond after 20 seconds. If you just enabled custom SMTP, check the SMTP host, port, username, password, sender address, and Supabase Auth logs."
             );
         } catch (error) {
+            window.clearTimeout(slowNotice);
             status.textContent = authErrorMessage(error);
             submitButton.disabled = false;
             return;
         }
+        window.clearTimeout(slowNotice);
         submitButton.disabled = false;
         if (result.error) {
             status.textContent = authErrorMessage(result.error);

@@ -12,6 +12,7 @@ const modeCopy = document.getElementById("auth-mode-copy");
 const submitButton = document.getElementById("login-submit-button");
 const password = document.getElementById("login-password");
 const editorUrl = mount?.dataset.editorUrl || "../forum/";
+const adminUrl = mount?.dataset.adminUrl || "../admin-dashboard/";
 
 const copy = {
     signin: {
@@ -59,7 +60,8 @@ async function init() {
 
     const { data } = await client.auth.getSession();
     if (data.session) {
-        window.location.href = editorUrl;
+        const signedInEmail = result.data.user?.email || email;
+        window.location.href = signedInEmail.toLowerCase() === "hcnyastro@gmail.com" ? adminUrl : editorUrl;
         return;
     }
 

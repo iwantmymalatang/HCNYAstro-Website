@@ -1,0 +1,90 @@
+{{ define "main" }}
+<section class="shell page-head admin-head">
+    <a class="back-link" href="{{ "forum/" | relURL }}">← Back</a>
+    <h1>{{ .Title }}</h1>
+    <div class="page-summary">
+        <p>Private moderation and forum overview for HCNY Astronomy.</p>
+    </div>
+</section>
+
+<section
+    class="shell admin-dashboard"
+    id="admin-dashboard"
+    data-supabase-url="{{ .Site.Params.supabaseUrl }}"
+    data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
+>
+    <div class="admin-gate" id="admin-gate">
+        <p class="builder-status">Checking admin access...</p>
+    </div>
+
+    <div class="admin-dashboard-body" id="admin-dashboard-body" hidden>
+        <div class="admin-dashboard-bar">
+            <div>
+                <strong id="admin-name">Admin</strong>
+                <span id="admin-email"></span>
+            </div>
+            <div class="admin-post-actions">
+                <button type="button" id="admin-refresh">Refresh</button>
+                <button type="button" id="admin-logout">Log out</button>
+            </div>
+        </div>
+
+        <section class="admin-metrics" aria-label="Site analytics">
+            <article>
+                <span>Total users</span>
+                <strong id="metric-users">0</strong>
+            </article>
+            <article>
+                <span>Forum posts</span>
+                <strong id="metric-posts">0</strong>
+            </article>
+            <article>
+                <span>Comments</span>
+                <strong id="metric-comments">0</strong>
+            </article>
+            <article>
+                <span>Open reports</span>
+                <strong id="metric-reports">0</strong>
+            </article>
+        </section>
+
+        <div class="admin-dashboard-grid">
+            <section class="admin-panel">
+                <div class="admin-panel-head">
+                    <h2>Reports</h2>
+                    <span id="reports-count">0 open</span>
+                </div>
+                <div class="admin-list" id="admin-reports"></div>
+            </section>
+
+            <section class="admin-panel">
+                <div class="admin-panel-head">
+                    <h2>Users</h2>
+                    <span id="users-count">0 total</span>
+                </div>
+                <div class="admin-list" id="admin-users"></div>
+            </section>
+
+            <section class="admin-panel">
+                <div class="admin-panel-head">
+                    <h2>Recent posts</h2>
+                    <span id="posts-count">0 total</span>
+                </div>
+                <div class="admin-list" id="admin-posts"></div>
+            </section>
+
+            <section class="admin-panel">
+                <div class="admin-panel-head">
+                    <h2>Recent comments</h2>
+                    <span id="comments-count">0 total</span>
+                </div>
+                <div class="admin-list" id="admin-comments"></div>
+            </section>
+        </div>
+    </div>
+</section>
+{{ end }}
+
+{{ define "scripts" }}
+    <script type="module" src="{{ "js/admin-dashboard.js" | relURL }}?v={{ now.Unix }}"></script>
+{{ end }}

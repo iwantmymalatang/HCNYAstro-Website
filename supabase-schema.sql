@@ -226,7 +226,7 @@ create policy "Profiles are readable"
 on public.profiles
 for select
 to authenticated
-using (true);
+using (id = auth.uid() or public.is_admin());
 
 drop policy if exists "Users update their profile" on public.profiles;
 create policy "Users update their profile"

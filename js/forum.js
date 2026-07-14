@@ -203,6 +203,7 @@ async function renderAccount() {
         <button type="button" id="forum-new-post">New post</button>
         <span>${escapeHtml(displayName())}</span>
         ${isAdmin() ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
+        ${isAdmin() ? '<a class="read-link" href="../admin-dashboard/">Dashboard</a>' : ""}
         ${isAdmin() ? '<button type="button" id="forum-reports">Reports</button>' : ""}
         <button type="button" id="forum-settings">My settings</button>
         <button type="button" id="forum-logout">Log out</button>

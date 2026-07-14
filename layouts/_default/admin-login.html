@@ -3,7 +3,7 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Sign in or sign up with one account. Owner-approved contributors can manage posts.</p>
+        <p>Sign in or sign up to contribute to the forum.</p>
     </div>
 </section>
 
@@ -12,21 +12,20 @@
     id="dynamic-login"
     data-supabase-url="{{ .Site.Params.supabaseUrl }}"
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
-    data-editor-url="{{ "post-admin/" | relURL }}"
+    data-editor-url="{{ "forum/" | relURL }}"
 >
     <div class="auth-tabs" role="tablist" aria-label="Login options">
         <button type="button" class="is-active" data-auth-mode="signin">Sign in</button>
         <button type="button" data-auth-mode="signup">Sign up</button>
-        <button type="button" data-auth-mode="admin">Contributor login</button>
     </div>
     <div class="role-guide">
         <div>
-            <strong>Signed in</strong>
-            <span>Receive post updates automatically.</span>
+            <strong>Contributor</strong>
+            <span>Every signed-in account can create forum posts, comment, and vote.</span>
         </div>
         <div>
-            <strong>Contributor</strong>
-            <span>Create, edit, publish, and delete posts after owner approval.</span>
+            <strong>Admin</strong>
+            <span>Only hcnyastro@gmail.com can moderate the forum.</span>
         </div>
     </div>
     <form class="post-form auth-panel" id="dynamic-login-form">
@@ -52,5 +51,5 @@
 {{ end }}
 
 {{ define "scripts" }}
-    <script type="module" src="{{ "js/dynamic-posts.js" | relURL }}?v={{ now.Unix }}"></script>
+    <script type="module" src="{{ "js/auth.js" | relURL }}?v={{ now.Unix }}"></script>
 {{ end }}

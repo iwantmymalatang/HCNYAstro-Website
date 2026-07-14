@@ -1,0 +1,67 @@
+{{ define "main" }}
+<section class="shell page-head forum-head">
+    <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
+    <h1>{{ .Title }}</h1>
+    {{ with .Content }}<div class="page-summary">{{ . }}</div>{{ end }}
+</section>
+
+<section
+    class="shell forum-app"
+    id="forum-app"
+    data-supabase-url="{{ .Site.Params.supabaseUrl }}"
+    data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
+>
+    <div class="forum-toolbar">
+        <div class="forum-tabs" role="tablist" aria-label="Forum categories">
+            <button type="button" class="is-active" data-forum-tab="guide">Guides and Documentation</button>
+            <button type="button" data-forum-tab="question">Questions</button>
+        </div>
+        <div class="forum-account" id="forum-account"></div>
+    </div>
+
+    <form class="post-form forum-compose" id="forum-compose" hidden>
+        <div class="image-helper-head">
+            <span>New forum post</span>
+            <button type="button" id="forum-cancel-edit" hidden>Cancel edit</button>
+        </div>
+        <input id="forum-edit-id" type="hidden">
+        <div class="form-grid">
+            <label>
+                <span>Type</span>
+                <select id="forum-type">
+                    <option value="guide">Guides and Documentation</option>
+                    <option value="question">Questions</option>
+                </select>
+            </label>
+            <label>
+                <span>Username</span>
+                <input id="forum-username" type="text" placeholder="Your display name" autocomplete="nickname" required>
+            </label>
+        </div>
+        <label>
+            <span>Title</span>
+            <input id="forum-title" type="text" placeholder="AstroChallenge preparation notes" autocomplete="off" required>
+        </label>
+        <label>
+            <span>Tags</span>
+            <input id="forum-tags" type="text" placeholder="olympiad, mechanics, observation" autocomplete="off">
+        </label>
+        <label>
+            <span>Content</span>
+            <textarea id="forum-body" rows="10" placeholder="Write your guide, documentation, or question here." required></textarea>
+        </label>
+        <div class="builder-actions">
+            <button type="submit" id="forum-submit">Publish to forum</button>
+        </div>
+        <p class="builder-status" id="forum-compose-status"></p>
+    </form>
+
+    <p class="builder-status" id="forum-status">Loading forum...</p>
+    <div class="forum-list" id="forum-list"></div>
+    <article class="forum-thread" id="forum-thread" hidden></article>
+</section>
+{{ end }}
+
+{{ define "scripts" }}
+<script type="module" src="{{ "js/forum.js" | relURL }}?v={{ now.Unix }}"></script>
+{{ end }}

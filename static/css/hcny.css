@@ -932,6 +932,202 @@ h1 {
     cursor: pointer;
 }
 
+.forum-head {
+    min-height: 28vh;
+}
+
+.forum-app {
+    display: grid;
+    gap: 18px;
+    padding-bottom: 96px;
+}
+
+.forum-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+}
+
+.forum-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 999px;
+    background: rgba(3, 4, 10, 0.22);
+}
+
+.forum-tabs button,
+.forum-account button,
+.forum-card h2 button,
+.comment-votes button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.forum-tabs button {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.forum-tabs button.is-active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.forum-account {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    color: var(--muted);
+}
+
+.forum-account strong {
+    color: #ffffff;
+}
+
+.forum-account button {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.forum-compose {
+    max-width: none;
+}
+
+.forum-list {
+    display: grid;
+    gap: 14px;
+}
+
+.forum-card h2 button {
+    padding: 0;
+    text-align: left;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.forum-card h2 button:hover {
+    color: var(--accent);
+}
+
+.forum-meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.forum-thread {
+    display: grid;
+    gap: 18px;
+    padding-bottom: 72px;
+}
+
+.comments {
+    display: grid;
+    gap: 14px;
+    max-width: 860px;
+    margin-top: 24px;
+}
+
+.comments h2 {
+    margin: 0;
+    color: #ffffff;
+}
+
+.comment-form {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 18px;
+    background: rgba(3, 4, 10, 0.18);
+}
+
+.comment-form label {
+    display: grid;
+    gap: 8px;
+}
+
+.comment-form span {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.comment-form textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+    font: inherit;
+    resize: vertical;
+    outline: none;
+}
+
+.comment-list {
+    display: grid;
+    gap: 10px;
+}
+
+.comment {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 18px;
+    background: rgba(3, 4, 10, 0.18);
+}
+
+.comment p {
+    margin: 8px 0 0;
+    color: var(--text);
+    line-height: 1.65;
+}
+
+.comment-votes {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 4px;
+    color: #ffffff;
+}
+
+.comment-votes button {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 10px;
+    color: var(--muted);
+}
+
+.comment-votes button:hover {
+    color: #ffffff;
+    border-color: var(--accent);
+}
+
 .site-footer {
     border-top: 1px solid var(--line);
     color: var(--muted);
@@ -1039,9 +1235,20 @@ h1 {
 
     .subscribe-panel,
     .subscribe-panel form,
-    .role-guide {
+    .role-guide,
+    .forum-toolbar {
         grid-template-columns: 1fr;
         flex-direction: column;
+        align-items: stretch;
+    }
+
+    .forum-tabs,
+    .forum-account {
+        justify-content: stretch;
+    }
+
+    .forum-tabs button {
+        flex: 1 1 180px;
     }
 
     .hero h1 {

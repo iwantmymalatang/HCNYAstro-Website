@@ -1,0 +1,445 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const app = document.getElementById("forum-app");
+const config = {
+    url: app?.dataset.supabaseUrl?.trim() || "",
+    key: app?.dataset.supabaseKey?.trim() || "",
+};
+const client = config.url && config.key ? createClient(config.url, config.key) : null;
+
+const state = {
+    tab: "guide",
+    session: null,
+    profile: null,
+    threads: [],
+    selectedThread: null,
+};
+
+const els = {
+    account: document.getElementById("forum-account"),
+    compose: document.getElementById("forum-compose"),
+    composeStatus: document.getElementById("forum-compose-status"),
+    status: document.getElementById("forum-status"),
+    list: document.getElementById("forum-list"),
+    thread: document.getElementById("forum-thread"),
+    editId: document.getElementById("forum-edit-id"),
+    type: document.getElementById("forum-type"),
+    username: document.getElementById("forum-username"),
+    title: document.getElementById("forum-title"),
+    tags: document.getElementById("forum-tags"),
+    body: document.getElementById("forum-body"),
+    submit: document.getElementById("forum-submit"),
+    cancelEdit: document.getElementById("forum-cancel-edit"),
+};
+
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function slugify(value) {
+    return value.toLowerCase().trim()
+        .replace(/['"]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 72) || "forum-post";
+}
+
+function normalizeTags(value) {
+    if (Array.isArray(value)) return value.map((tag) => String(tag).trim()).filter(Boolean);
+    return String(value || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+}
+
+function renderTags(tags) {
+    const normalized = normalizeTags(tags);
+    if (!normalized.length) return "";
+    return `<div class="tag-row">${normalized.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>`;
+}
+
+function inlineMarkdown(value) {
+    return escapeHtml(value)
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+function renderBody(markdown) {
+    return String(markdown || "")
+        .split(/\n{2,}/)
+        .map((block) => block.trim())
+        .filter(Boolean)
+        .map((block) => {
+            if (block.startsWith("### ")) return `<h3>${inlineMarkdown(block.slice(4))}</h3>`;
+            if (block.startsWith("## ")) return `<h2>${inlineMarkdown(block.slice(3))}</h2>`;
+            return `<p>${inlineMarkdown(block).replace(/\n/g, "<br>")}</p>`;
+        })
+        .join("");
+}
+
+function formatDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("en-SG", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "Asia/Singapore",
+    }).format(date).replace(/\//g, ".");
+}
+
+function canEdit(row) {
+    return state.profile?.role === "admin" || row.created_by === state.session?.user?.id;
+}
+
+function resetCompose() {
+    els.compose.reset();
+    els.editId.value = "";
+    els.type.value = state.tab;
+    els.username.value = state.profile?.username || "";
+    els.submit.textContent = "Publish to forum";
+    els.cancelEdit.hidden = true;
+    els.composeStatus.textContent = "";
+}
+
+function setStatus(message) {
+    els.status.textContent = message || "";
+    els.status.hidden = !message;
+}
+
+async function refreshProfile() {
+    if (!state.session) {
+        state.profile = null;
+        return;
+    }
+
+    const { data, error } = await client
+        .from("profiles")
+        .select("id,email,username,role")
+        .eq("id", state.session.user.id)
+        .single();
+    if (error) {
+        state.profile = {
+            id: state.session.user.id,
+            email: state.session.user.email,
+            username: state.session.user.email?.split("@")[0] || "Contributor",
+            role: "contributor",
+        };
+        return;
+    }
+    state.profile = data;
+}
+
+async function renderAccount() {
+    if (!client) {
+        els.account.innerHTML = '<span class="builder-status">Forum is not connected.</span>';
+        return;
+    }
+
+    if (!state.session) {
+        els.account.innerHTML = '<a class="read-link" href="../admin/">Sign in to contribute</a>';
+        els.compose.hidden = true;
+        return;
+    }
+
+    els.compose.hidden = false;
+    els.username.value = state.profile?.username || state.session.user.email?.split("@")[0] || "";
+    els.account.innerHTML = `
+        <span>${escapeHtml(state.profile?.username || state.session.user.email)}</span>
+        ${state.profile?.role === "admin" ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
+        <button type="button" id="forum-logout">Log out</button>
+    `;
+    document.getElementById("forum-logout").addEventListener("click", async () => {
+        await client.auth.signOut();
+        state.session = null;
+        state.profile = null;
+        await renderAccount();
+        await loadThreads();
+    });
+}
+
+async function loadThreads() {
+    if (!client) {
+        setStatus("Forum is not connected yet.");
+        return;
+    }
+    setStatus("Loading forum...");
+    els.thread.hidden = true;
+
+    const { data, error } = await client
+        .from("forum_threads_with_counts")
+        .select("id,slug,type,title,body,tags,username,created_by,created_at,updated_at,comment_count")
+        .eq("type", state.tab)
+        .order("updated_at", { ascending: false });
+
+    if (error) {
+        els.list.innerHTML = "";
+        setStatus(error.message);
+        return;
+    }
+
+    state.threads = data || [];
+    setStatus("");
+    renderThreadList();
+}
+
+function renderThreadList() {
+    if (!state.threads.length) {
+        els.list.innerHTML = `<p class="builder-status">No ${state.tab === "guide" ? "guides" : "questions"} yet.</p>`;
+        return;
+    }
+    els.list.innerHTML = state.threads.map((thread) => `
+        <article class="post-card forum-card" data-thread-id="${thread.id}">
+            <div>
+                <time>${formatDate(thread.created_at)}</time>
+                <h2><button type="button" data-open-thread="${thread.id}">${escapeHtml(thread.title)}</button></h2>
+                ${renderTags(thread.tags)}
+                <p>${escapeHtml(thread.body).slice(0, 220)}${thread.body?.length > 220 ? "..." : ""}</p>
+                <span class="forum-meta">By ${escapeHtml(thread.username || "Contributor")} · ${thread.comment_count || 0} comments</span>
+            </div>
+            <button class="read-link" type="button" data-open-thread="${thread.id}">Open</button>
+        </article>
+    `).join("");
+
+    els.list.querySelectorAll("[data-open-thread]").forEach((button) => {
+        button.addEventListener("click", () => openThread(button.dataset.openThread));
+    });
+}
+
+async function openThread(id) {
+    const { data, error } = await client
+        .from("forum_threads")
+        .select("*")
+        .eq("id", id)
+        .single();
+    if (error) {
+        setStatus(error.message);
+        return;
+    }
+
+    state.selectedThread = data;
+    els.list.innerHTML = "";
+    els.thread.hidden = false;
+    await renderSelectedThread();
+}
+
+async function fetchComments(threadId) {
+    const { data, error } = await client
+        .from("forum_comments_with_scores")
+        .select("*")
+        .eq("thread_id", threadId)
+        .order("score", { ascending: false })
+        .order("created_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+}
+
+async function renderSelectedThread() {
+    const thread = state.selectedThread;
+    const comments = await fetchComments(thread.id);
+    const actions = canEdit(thread)
+        ? `<button type="button" data-edit-thread>Edit</button><button type="button" data-delete-thread>Delete</button>`
+        : "";
+    const commentForm = state.session
+        ? `<form class="comment-form" id="comment-form">
+                <label>
+                    <span>Comment as ${escapeHtml(state.profile?.username || "Contributor")}</span>
+                    <textarea id="comment-body" rows="4" placeholder="Add a comment..." required></textarea>
+                </label>
+                <div class="builder-actions"><button type="submit">Comment</button></div>
+                <p class="builder-status" id="comment-status"></p>
+            </form>`
+        : '<p class="builder-status"><a href="../admin/">Sign in</a> to comment and vote.</p>';
+
+    els.thread.innerHTML = `
+        <button class="back-link" type="button" data-back-forum>← Back</button>
+        <header class="single-head">
+            <time>${formatDate(thread.created_at)}</time>
+            <h1>${escapeHtml(thread.title)}</h1>
+            ${renderTags(thread.tags)}
+            <p class="forum-meta">By ${escapeHtml(thread.username || "Contributor")}</p>
+            <div class="admin-post-actions">${actions}</div>
+        </header>
+        <div class="single-content">${renderBody(thread.body)}</div>
+        <section class="comments">
+            <h2>Comments</h2>
+            ${commentForm}
+            <div class="comment-list">
+                ${comments.length ? comments.map(renderComment).join("") : '<p class="builder-status">No comments yet.</p>'}
+            </div>
+        </section>
+    `;
+
+    els.thread.querySelector("[data-back-forum]").addEventListener("click", loadThreads);
+    els.thread.querySelector("[data-edit-thread]")?.addEventListener("click", () => editThread(thread));
+    els.thread.querySelector("[data-delete-thread]")?.addEventListener("click", () => deleteThread(thread.id));
+    els.thread.querySelector("#comment-form")?.addEventListener("submit", submitComment);
+    els.thread.querySelectorAll("[data-vote-comment]").forEach((button) => {
+        button.addEventListener("click", () => voteComment(button.dataset.voteComment, Number(button.dataset.voteValue)));
+    });
+    els.thread.querySelectorAll("[data-delete-comment]").forEach((button) => {
+        button.addEventListener("click", () => deleteComment(button.dataset.deleteComment));
+    });
+}
+
+function renderComment(comment) {
+    const actions = canEdit(comment)
+        ? `<button type="button" data-delete-comment="${comment.id}">Delete</button>`
+        : "";
+    return `
+        <article class="comment">
+            <div class="comment-votes">
+                <button type="button" data-vote-comment="${comment.id}" data-vote-value="1">▲</button>
+                <strong>${comment.score || 0}</strong>
+                <button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>
+            </div>
+            <div>
+                <div class="forum-meta">${escapeHtml(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
+                <p>${escapeHtml(comment.body)}</p>
+                <div class="admin-post-actions">${actions}</div>
+            </div>
+        </article>
+    `;
+}
+
+async function submitComment(event) {
+    event.preventDefault();
+    const status = document.getElementById("comment-status");
+    const body = document.getElementById("comment-body").value.trim();
+    if (!body) return;
+    status.textContent = "Saving comment...";
+    const { error } = await client.from("forum_comments").insert({
+        thread_id: state.selectedThread.id,
+        body,
+        username: state.profile?.username || els.username.value.trim() || "Contributor",
+    });
+    if (error) {
+        status.textContent = error.message;
+        return;
+    }
+    await renderSelectedThread();
+}
+
+async function voteComment(commentId, value) {
+    if (!state.session) {
+        window.location.href = "../admin/";
+        return;
+    }
+    const { error } = await client.from("forum_comment_votes").upsert({
+        comment_id: commentId,
+        value,
+        user_id: state.session.user.id,
+    }, { onConflict: "comment_id,user_id" });
+    if (error) {
+        setStatus(error.message);
+        return;
+    }
+    await renderSelectedThread();
+}
+
+function editThread(thread) {
+    els.editId.value = thread.id;
+    els.type.value = thread.type;
+    els.username.value = thread.username || state.profile?.username || "";
+    els.title.value = thread.title || "";
+    els.tags.value = normalizeTags(thread.tags).join(", ");
+    els.body.value = thread.body || "";
+    els.submit.textContent = "Save forum post";
+    els.cancelEdit.hidden = false;
+    els.compose.hidden = false;
+    els.compose.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function deleteThread(id) {
+    if (!window.confirm("Delete this forum post?")) return;
+    const { error } = await client.from("forum_threads").delete().eq("id", id);
+    if (error) {
+        setStatus(error.message);
+        return;
+    }
+    state.selectedThread = null;
+    await loadThreads();
+}
+
+async function deleteComment(id) {
+    if (!window.confirm("Delete this comment?")) return;
+    const { error } = await client.from("forum_comments").delete().eq("id", id);
+    if (error) {
+        setStatus(error.message);
+        return;
+    }
+    await renderSelectedThread();
+}
+
+async function submitThread(event) {
+    event.preventDefault();
+    if (!state.session) {
+        window.location.href = "../admin/";
+        return;
+    }
+    const title = els.title.value.trim();
+    const body = els.body.value.trim();
+    if (!title || !body) return;
+
+    els.composeStatus.textContent = "Saving...";
+    const payload = {
+        type: els.type.value,
+        title,
+        slug: `${slugify(title)}-${Date.now().toString(36)}`,
+        body,
+        tags: normalizeTags(els.tags.value),
+        username: els.username.value.trim() || state.profile?.username || "Contributor",
+        updated_at: new Date().toISOString(),
+    };
+
+    let result;
+    if (els.editId.value) {
+        result = await client.from("forum_threads").update(payload).eq("id", els.editId.value).select("id").single();
+    } else {
+        result = await client.from("forum_threads").insert(payload).select("id").single();
+    }
+    if (result.error) {
+        els.composeStatus.textContent = result.error.message;
+        return;
+    }
+
+    await client.from("profiles").update({ username: payload.username }).eq("id", state.session.user.id);
+    state.tab = payload.type;
+    await refreshProfile();
+    resetCompose();
+    await renderAccount();
+    await loadThreads();
+    if (result.data?.id) await openThread(result.data.id);
+}
+
+async function init() {
+    if (!app) return;
+    if (!client) {
+        await renderAccount();
+        setStatus("Forum is not connected yet.");
+        return;
+    }
+
+    const { data } = await client.auth.getSession();
+    state.session = data.session;
+    await refreshProfile();
+    await renderAccount();
+    resetCompose();
+
+    document.querySelectorAll("[data-forum-tab]").forEach((button) => {
+        button.addEventListener("click", async () => {
+            state.tab = button.dataset.forumTab;
+            document.querySelectorAll("[data-forum-tab]").forEach((tab) => tab.classList.toggle("is-active", tab === button));
+            resetCompose();
+            await loadThreads();
+        });
+    });
+    els.compose.addEventListener("submit", submitThread);
+    els.cancelEdit.addEventListener("click", resetCompose);
+
+    await loadThreads();
+}
+
+await init();

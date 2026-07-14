@@ -8,9 +8,5 @@
     <div class="single-content">
         {{ .Content }}
     </div>
-    {{ if eq .Section "posts" }}
-        {{ $filePath := replace .File.Path "\\" "/" }}
-        <a class="owner-action" href="{{ .Site.Params.githubRepo }}/edit/main/content/{{ $filePath }}" target="_blank" rel="noopener">Edit this post on GitHub</a>
-    {{ end }}
 </article>
 {{ end }}

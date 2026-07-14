@@ -12,7 +12,7 @@ title = 'Repository'
 
 To be added soon
 
-[Handout explanation videos](https://www.aoguide.app/) are December 2026 training resources prepared for HCNY Astronomy members.
+[Handout explanation videos](https://www.aoguide.app/) are December 2026 training resources prepared for HCNY Astronomy contributors.
 
 **Lesson slides and materials**
 

@@ -1,68 +1,27 @@
 # HCNY Astronomy Website
 
-Hugo site for HCNYAstro with Supabase-powered posts.
+Hugo site for HCNYAstro with a Supabase-powered forum.
 
-## Roles
+## Forum Model
 
-- Signed-up accounts automatically receive post email notifications.
-- New Supabase Auth accounts start as `member`.
-- Contributors can log in at `/admin/`, open the contributor page, and create, edit, publish, draft, delete, and upload images for posts.
-- Admins have contributor permissions and can be used as owner accounts.
+- The old posts page is replaced by `/forum/`.
+- Every signed-in account is a contributor.
+- Contributors can create forum posts, comment, and vote on comments.
+- Forum posts are split into `Guides and Documentation` and `Questions`.
+- `hcnyastro@gmail.com` is the only admin account and can moderate forum content.
 
-After running `supabase-schema.sql`, promote an approved account in Supabase SQL Editor:
+Run `supabase-schema.sql` in the Supabase SQL Editor after deploying these changes. It creates:
 
-```sql
-update public.profiles
-set role = 'contributor'
-where email = 'student@example.com';
-```
+- `profiles`
+- `forum_threads`
+- `forum_comments`
+- `forum_comment_votes`
+- read views for comment counts and comment scores
 
-For the HCNY Astro Gmail account:
-
-```sql
-update public.profiles
-set role = 'contributor'
-where email = 'hcnyastro@gmail.com';
-```
-
-To make an owner account:
-
-```sql
-update public.profiles
-set role = 'admin'
-where email = 'owner@example.com';
-```
-
-## Notifications
-
-The Edge Function at `supabase/functions/notify-new-post/index.ts` runs after a contributor publishes a new post.
-
-Set these Supabase Edge Function secrets to enable email:
-
-```text
-RESEND_API_KEY=...
-EMAIL_FROM=HCNY Astronomy <updates@example.com>
-```
-
-Set these secrets to also publish an Instagram Story image:
-
-```text
-INSTAGRAM_ACCESS_TOKEN=...
-INSTAGRAM_USER_ID=...
-INSTAGRAM_STORY_IMAGE_URL=https://example.com/story-image.png
-INSTAGRAM_GRAPH_VERSION=v21.0
-```
-
-Instagram publishing requires an Instagram Business or Creator account connected through Meta's official API flow. The email notification contains the post link and unsubscribe link. The story integration posts a story image when credentials are configured.
+Existing AstroChallenge and RI collaboration posts are seeded as guide threads so the old content is not lost.
 
 ## Local Development
 
 ```powershell
 hugo server -D
 ```
-
-Static Markdown posts can still live in `content/posts/`, but normal posting should happen through the website admin editor.
-
-The two original Markdown posts are also seeded into Supabase by `supabase-schema.sql`. After rerunning the SQL, they appear in the post editor and can be edited or deleted like other posts. The static Markdown versions stay as a fallback, and the website hides duplicate static cards when the Supabase versions load.
-
-New member accounts are automatically added to `public.subscribers`. Existing auth users are backfilled into subscribers the next time `supabase-schema.sql` is run, unless their email is already in the subscriber table.

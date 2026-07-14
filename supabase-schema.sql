@@ -126,7 +126,7 @@ begin
   on conflict (id) do update
   set email = excluded.email,
       username = coalesce(public.profiles.username, excluded.username),
-      role = case when excluded.email = 'hcnyastro@gmail.com' then 'admin' else public.profiles.role end,
+      role = case when lower(excluded.email) = 'hcnyastro@gmail.com' then 'admin' else public.profiles.role end,
       updated_at = now();
 
   return new;
@@ -148,7 +148,7 @@ from auth.users
 on conflict (id) do update
 set email = excluded.email,
     username = coalesce(public.profiles.username, excluded.username),
-    role = case when excluded.email = 'hcnyastro@gmail.com' then 'admin' else 'contributor' end,
+    role = case when lower(excluded.email) = 'hcnyastro@gmail.com' then 'admin' else 'contributor' end,
     updated_at = now();
 
 insert into public.forum_threads (

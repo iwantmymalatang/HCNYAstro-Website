@@ -11,6 +11,9 @@ const modeInput = document.getElementById("auth-mode");
 const modeCopy = document.getElementById("auth-mode-copy");
 const submitButton = document.getElementById("login-submit-button");
 const password = document.getElementById("login-password");
+const confirmPasswordRow = document.getElementById("confirm-password-row");
+const confirmPassword = document.getElementById("confirm-password");
+const togglePassword = document.getElementById("toggle-password");
 const editorUrl = mount?.dataset.editorUrl || "../forum/";
 const adminUrl = mount?.dataset.adminUrl || "../admin-dashboard/";
 
@@ -23,21 +26,11 @@ const copy = {
     },
     signup: {
         title: "Sign up",
-        text: "Create one account to post, comment, and vote. Use a unique password. If email confirmation is enabled, check your inbox after signing up.",
+        text: "Create one account to post, comment, and vote. If email confirmation is enabled, check your inbox after signing up.",
         submit: "Create account",
         autocomplete: "new-password",
     },
 };
-
-function passwordIssue(value) {
-    if (value.length < 10) return "Use at least 10 characters.";
-    if (!/[a-z]/.test(value)) return "Add a lowercase letter.";
-    if (!/[A-Z]/.test(value)) return "Add an uppercase letter.";
-    if (!/[0-9]/.test(value)) return "Add a number.";
-    if (!/[^A-Za-z0-9]/.test(value)) return "Add a symbol.";
-    if (/password|qwerty|123456|hcny|astro/i.test(value)) return "Avoid common or site-related words.";
-    return "";
-}
 
 function authErrorMessage(error) {
     const message = error?.message || String(error || "");
@@ -72,6 +65,9 @@ function setMode(mode) {
     modeCopy.innerHTML = `<strong>${detail.title}</strong><p>${detail.text}</p>`;
     submitButton.textContent = detail.submit;
     password.autocomplete = detail.autocomplete;
+    confirmPasswordRow.hidden = mode !== "signup";
+    confirmPassword.required = mode === "signup";
+    confirmPassword.value = "";
     document.querySelectorAll("[data-auth-mode]").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.authMode === mode);
     });
@@ -100,12 +96,9 @@ async function init() {
         const mode = modeInput.value || "signin";
         const email = document.getElementById("login-email").value.trim();
         const loginPassword = password.value;
-        if (mode === "signup") {
-            const issue = passwordIssue(loginPassword);
-            if (issue) {
-                status.textContent = `Weak password: ${issue}`;
-                return;
-            }
+        if (mode === "signup" && loginPassword !== confirmPassword.value) {
+            status.textContent = "Passwords do not match.";
+            return;
         }
         status.textContent = mode === "signup" ? "Creating account..." : "Signing in...";
         submitButton.disabled = true;
@@ -144,6 +137,12 @@ async function init() {
     });
 
     setMode("signin");
+    togglePassword.addEventListener("click", () => {
+        const nextType = password.type === "password" ? "text" : "password";
+        password.type = nextType;
+        confirmPassword.type = nextType;
+        togglePassword.textContent = nextType === "password" ? "Show" : "Hide";
+    });
 }
 
 await init();

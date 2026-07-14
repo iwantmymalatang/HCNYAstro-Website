@@ -668,6 +668,30 @@ h1 {
     box-shadow: 0 0 0 3px rgba(143, 140, 255, 0.15);
 }
 
+.password-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.password-field button {
+    min-height: 44px;
+    padding: 0 13px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.password-field button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .output-meta {
     display: grid;
     gap: 6px;

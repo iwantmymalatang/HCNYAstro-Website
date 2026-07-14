@@ -96,8 +96,17 @@ function formatDate(value) {
     }).format(date).replace(/\//g, ".");
 }
 
+function isHcnyAdmin() {
+    const email = (state.session?.user?.email || state.profile?.email || "").toLowerCase();
+    return email === "hcnyastro@gmail.com";
+}
+
+function isAdmin() {
+    return isHcnyAdmin() || state.profile?.role === "admin";
+}
+
 function canEdit(row) {
-    return state.profile?.role === "admin" || row.created_by === state.session?.user?.id;
+    return isAdmin() || row.created_by === state.session?.user?.id;
 }
 
 function displayName() {
@@ -143,6 +152,9 @@ async function refreshProfile() {
         return;
     }
     state.profile = data;
+    if (isHcnyAdmin()) {
+        state.profile = { ...state.profile, role: "admin", email: state.session.user.email || state.profile.email };
+    }
 }
 
 async function renderAccount() {
@@ -166,7 +178,7 @@ async function renderAccount() {
     els.account.innerHTML = `
         <button type="button" id="forum-new-post">New post</button>
         <span>${escapeHtml(displayName())}</span>
-        ${state.profile?.role === "admin" ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
+        ${isAdmin() ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
         <button type="button" id="forum-settings">My settings</button>
         <button type="button" id="forum-logout">Log out</button>
     `;
@@ -277,7 +289,7 @@ async function renderSelectedThread() {
     const thread = state.selectedThread;
     const comments = await fetchComments(thread.id);
     const actions = canEdit(thread)
-        ? `<button type="button" data-edit-thread>Edit</button>${state.profile?.role === "admin" ? '<button type="button" data-delete-thread>Delete</button>' : ""}`
+        ? `<button type="button" data-edit-thread>Edit</button>${isAdmin() ? '<button type="button" data-delete-thread>Delete</button>' : ""}`
         : "";
     const commentForm = state.session
         ? `<form class="comment-form" id="comment-form">

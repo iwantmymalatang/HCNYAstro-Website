@@ -23,3 +23,19 @@ set role = 'contributor',
     updated_at = now()
 where lower(coalesce(email, '')) <> 'hcnyastro@gmail.com'
   and role = 'admin';
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(lower(auth.jwt() ->> 'email') = 'hcnyastro@gmail.com', false)
+    or exists (
+      select 1
+      from public.profiles
+      where id = auth.uid()
+        and lower(email) = 'hcnyastro@gmail.com'
+        and role = 'admin'
+    );
+$$;

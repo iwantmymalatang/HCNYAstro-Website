@@ -10,7 +10,6 @@
     id="forum-app"
     data-supabase-url="{{ .Site.Params.supabaseUrl }}"
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
-    data-post-key="{{ .Site.Params.forumPostKey }}"
 >
     <div class="forum-toolbar">
         <div class="forum-tabs" role="tablist" aria-label="Forum categories">
@@ -22,17 +21,17 @@
         </div>
     </div>
 
-    <form class="forum-key-panel" id="forum-key-panel" hidden>
+    <form class="forum-settings-panel" id="forum-settings-panel" hidden>
         <div class="image-helper-head">
-            <span>Unlock posting</span>
-            <button type="button" id="forum-key-close">Close</button>
+            <span>Settings</span>
+            <button type="button" id="forum-settings-close">Close</button>
         </div>
         <label>
-            <span>Post key</span>
-            <input id="forum-post-key" type="password" autocomplete="off" placeholder="Enter key">
+            <span>Username</span>
+            <input id="forum-settings-username" type="text" autocomplete="nickname" placeholder="Display name">
         </label>
-        <button type="submit">Unlock</button>
-        <p class="builder-status" id="forum-key-status"></p>
+        <button type="submit">Save</button>
+        <p class="builder-status" id="forum-settings-status"></p>
     </form>
 
     <form class="post-form forum-compose" id="forum-compose" hidden>

@@ -1027,7 +1027,7 @@ h1 {
     box-shadow: 0 26px 90px rgba(0, 0, 0, 0.72);
 }
 
-.forum-key-panel {
+.forum-settings-panel {
     position: fixed;
     z-index: 60;
     top: 50%;
@@ -1046,16 +1046,16 @@ h1 {
     box-shadow: 0 26px 90px rgba(0, 0, 0, 0.72);
 }
 
-.forum-key-panel .image-helper-head {
+.forum-settings-panel .image-helper-head {
     grid-column: 1 / -1;
 }
 
-.forum-key-panel label {
+.forum-settings-panel label {
     display: grid;
     gap: 7px;
 }
 
-.forum-key-panel span {
+.forum-settings-panel span {
     color: var(--muted);
     font-size: 0.78rem;
     font-weight: 800;
@@ -1063,7 +1063,7 @@ h1 {
     text-transform: uppercase;
 }
 
-.forum-key-panel input {
+.forum-settings-panel input {
     min-height: 42px;
     padding: 0 13px;
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1074,7 +1074,7 @@ h1 {
     outline: none;
 }
 
-.forum-key-panel button {
+.forum-settings-panel button {
     min-height: 42px;
     padding: 0 14px;
     border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1086,7 +1086,7 @@ h1 {
     cursor: pointer;
 }
 
-.forum-key-panel button:hover {
+.forum-settings-panel button:hover {
     border-color: var(--accent);
     color: var(--accent);
 }
@@ -1339,7 +1339,7 @@ h1 {
         flex: 1 1 180px;
     }
 
-    .forum-key-panel {
+    .forum-settings-panel {
         width: 100%;
         grid-template-columns: 1fr;
     }

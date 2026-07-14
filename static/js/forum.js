@@ -4,7 +4,6 @@ const app = document.getElementById("forum-app");
 const config = {
     url: app?.dataset.supabaseUrl?.trim() || "",
     key: app?.dataset.supabaseKey?.trim() || "",
-    postKey: app?.dataset.postKey?.trim() || "",
 };
 const client = config.url && config.key ? createClient(config.url, config.key) : null;
 
@@ -24,10 +23,10 @@ const els = {
     list: document.getElementById("forum-list"),
     thread: document.getElementById("forum-thread"),
     newPost: document.getElementById("forum-new-post"),
-    keyPanel: document.getElementById("forum-key-panel"),
-    keyInput: document.getElementById("forum-post-key"),
-    keyStatus: document.getElementById("forum-key-status"),
-    keyClose: document.getElementById("forum-key-close"),
+    settingsPanel: document.getElementById("forum-settings-panel"),
+    settingsUsername: document.getElementById("forum-settings-username"),
+    settingsStatus: document.getElementById("forum-settings-status"),
+    settingsClose: document.getElementById("forum-settings-close"),
     editId: document.getElementById("forum-edit-id"),
     type: document.getElementById("forum-type"),
     postingAs: document.getElementById("forum-posting-as"),
@@ -104,10 +103,6 @@ function displayName() {
     return state.profile?.username || state.session?.user?.email?.split("@")[0] || "Contributor";
 }
 
-function postKeyUnlocked() {
-    return !config.postKey || sessionStorage.getItem("forumPostKeyUnlocked") === "true";
-}
-
 function resetCompose() {
     els.compose.reset();
     els.editId.value = "";
@@ -169,9 +164,11 @@ async function renderAccount() {
         <button type="button" id="forum-new-post">New post</button>
         <span>${escapeHtml(displayName())}</span>
         ${state.profile?.role === "admin" ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
+        <button type="button" id="forum-settings">Settings</button>
         <button type="button" id="forum-logout">Log out</button>
     `;
     document.getElementById("forum-new-post").addEventListener("click", openComposer);
+    document.getElementById("forum-settings").addEventListener("click", openSettings);
     document.getElementById("forum-logout").addEventListener("click", async () => {
         await client.auth.signOut();
         state.session = null;
@@ -216,7 +213,7 @@ async function loadThreads() {
 
 function renderThreadList() {
     els.thread.hidden = true;
-    els.keyPanel.hidden = true;
+    els.settingsPanel.hidden = true;
     if (!state.threads.length) {
         els.list.innerHTML = `<p class="builder-status">No ${state.tab === "guide" ? "guides" : "questions"} yet.</p>`;
         return;
@@ -241,7 +238,7 @@ function renderThreadList() {
 
 async function openThread(id) {
     els.compose.hidden = true;
-    els.keyPanel.hidden = true;
+    els.settingsPanel.hidden = true;
     const { data, error } = await client
         .from("forum_threads")
         .select("*")
@@ -273,7 +270,7 @@ async function renderSelectedThread() {
     const thread = state.selectedThread;
     const comments = await fetchComments(thread.id);
     const actions = canEdit(thread)
-        ? `<button type="button" data-edit-thread>Edit</button><button type="button" data-delete-thread>Delete</button>`
+        ? `<button type="button" data-edit-thread>Edit</button>${state.profile?.role === "admin" ? '<button type="button" data-delete-thread>Delete</button>' : ""}`
         : "";
     const commentForm = state.session
         ? `<form class="comment-form" id="comment-form">
@@ -318,7 +315,7 @@ async function renderSelectedThread() {
 }
 
 function renderComment(comment) {
-    const actions = canEdit(comment)
+    const actions = state.session
         ? `<button type="button" data-delete-comment="${comment.id}">Delete</button>`
         : "";
     return `
@@ -450,35 +447,46 @@ function openComposer() {
         window.location.href = "../admin/";
         return;
     }
-    if (!postKeyUnlocked()) {
-        els.compose.hidden = true;
-        els.thread.hidden = true;
-        els.keyPanel.hidden = false;
-        els.keyInput.value = "";
-        els.keyStatus.textContent = "";
-        els.keyInput.focus();
-        return;
-    }
     resetCompose();
     els.compose.hidden = false;
-    els.keyPanel.hidden = true;
+    els.settingsPanel.hidden = true;
     els.thread.hidden = true;
     els.postingAs.textContent = `Posting as ${displayName()}`;
 }
 
-function submitPostKey(event) {
-    event.preventDefault();
-    if (els.keyInput.value.trim() !== config.postKey) {
-        els.keyStatus.textContent = "Wrong key.";
+function openSettings() {
+    if (!state.session) {
+        window.location.href = "../admin/";
         return;
     }
-    sessionStorage.setItem("forumPostKeyUnlocked", "true");
-    els.keyPanel.hidden = true;
-    openComposer();
+    els.compose.hidden = true;
+    els.thread.hidden = true;
+    els.settingsPanel.hidden = false;
+    els.settingsUsername.value = displayName();
+    els.settingsStatus.textContent = "";
+    els.settingsUsername.focus();
+}
+
+async function submitSettings(event) {
+    event.preventDefault();
+    const username = els.settingsUsername.value.trim();
+    if (!username) {
+        els.settingsStatus.textContent = "Username is required.";
+        return;
+    }
+    els.settingsStatus.textContent = "Saving...";
+    const { error } = await client.from("profiles").update({ username }).eq("id", state.session.user.id);
+    if (error) {
+        els.settingsStatus.textContent = friendlyError(error);
+        return;
+    }
+    await refreshProfile();
+    await renderAccount();
+    els.settingsPanel.hidden = true;
 }
 
 function closePostPanels() {
-    els.keyPanel.hidden = true;
+    els.settingsPanel.hidden = true;
     resetCompose();
 }
 
@@ -505,9 +513,9 @@ async function init() {
         });
     });
     els.compose.addEventListener("submit", submitThread);
-    els.keyPanel.addEventListener("submit", submitPostKey);
+    els.settingsPanel.addEventListener("submit", submitSettings);
     els.cancelEdit.addEventListener("click", closePostPanels);
-    els.keyClose.addEventListener("click", closePostPanels);
+    els.settingsClose.addEventListener("click", closePostPanels);
 
     await loadThreads();
 }

@@ -116,9 +116,9 @@ function renderPostImage(url, title = "") {
 }
 
 function statusLabel(status) {
-    if (status === "approved") return "Approved";
-    if (status === "rejected") return "Rejected";
-    return "Pending approval";
+    if (status === "approved") return "Validated";
+    if (status === "rejected") return "Needs changes";
+    return "Waiting for validation";
 }
 
 function formatDate(value) {
@@ -143,6 +143,11 @@ function isAdmin() {
 
 function isTrusted() {
     return isAdmin() || state.profile?.trust_status === "trusted";
+}
+
+function contributorLabel() {
+    if (isAdmin()) return "Admin";
+    return isTrusted() ? "Validated contributor" : "New contributor";
 }
 
 function isEmailConfirmed() {
@@ -178,7 +183,7 @@ function resetCompose() {
     els.type.value = state.tab;
     els.audience.value = "public";
     els.audienceRow.hidden = !isAdmin();
-    els.submit.textContent = "Publish to forum";
+    els.submit.textContent = "Share with the forum";
     els.cancelEdit.textContent = "Close";
     els.composeStatus.textContent = "";
     els.postingAs.textContent = state.session ? `Posting as ${displayName()}` : "";
@@ -277,7 +282,7 @@ async function renderAccount() {
     els.account.innerHTML = `
         <button type="button" id="forum-new-post">New post</button>
         <span>${renderUsername(displayName(), isAdmin())}</span>
-        ${isAdmin() ? '<strong>Admin</strong>' : `<strong>${isTrusted() ? "Trusted" : "Untrusted"}</strong>`}
+        <strong>${contributorLabel()}</strong>
         ${isAdmin() ? '<a class="read-link" href="../admin-dashboard/">Dashboard</a>' : ""}
         ${isAdmin() ? '<button type="button" id="forum-reports">Reports</button>' : ""}
         <button type="button" id="forum-settings">My settings</button>
@@ -361,7 +366,7 @@ function renderThreadList() {
                 <h2><button type="button" data-open-thread="${thread.id}">${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</button></h2>
                 ${renderTags(thread.tags)}
                 <p>${escapeHtml(plainPreview(thread.body))}</p>
-                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor", thread.is_admin_author)} · ${thread.audience === "trusted" ? "Trusted only · " : ""}${thread.comment_count || 0} comments</span>
+                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor", thread.is_admin_author)} · ${thread.audience === "trusted" ? "Validated contributors only · " : ""}${thread.comment_count || 0} comments</span>
             </div>
             <button class="read-link" type="button" data-open-thread="${thread.id}">Open</button>
         </article>
@@ -379,10 +384,10 @@ async function renderUserPanel() {
     }
     const { data: posts, error } = await client
         .from("forum_threads")
-        .select("id,title,status,type,created_at")
+        .select("id,title,status,type,created_at,updated_at")
         .eq("created_by", state.session.user.id)
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(20);
     if (error) {
         els.userPanel.hidden = true;
         return;
@@ -391,25 +396,38 @@ async function renderUserPanel() {
         <article>
             <strong>${escapeHtml(post.title)}</strong>
             <span>${escapeHtml(post.type)} · ${statusLabel(post.status)}</span>
+            <span>Submitted ${formatDate(post.created_at)}${post.updated_at && post.updated_at !== post.created_at ? ` · Last edited ${formatDate(post.updated_at)}` : ""}</span>
+            <div class="forum-status-actions">
+                <button type="button" data-open-user-post="${post.id}">Open</button>
+                <button type="button" data-edit-user-post="${post.id}">Edit</button>
+            </div>
         </article>
     `).join("");
     els.userPanel.innerHTML = `
         <div>
-            <h2>Your forum status</h2>
-            <p>${isTrusted() ? "You are trusted. You can post and comment directly." : "You are untrusted. Your posts go to admin for approval before appearing publicly."}</p>
+            <h2>Your forum space</h2>
+            <p>${isTrusted()
+                ? "You can share posts and join comments directly. Your ideas help make the resource library stronger."
+                : "You are encouraged to make a post. New posts are sent for validation first, then they can appear for everyone once reviewed."}</p>
         </div>
-        <div class="forum-status-list">${postRows || '<p class="builder-status">No submitted posts yet.</p>'}</div>
+        <div class="forum-status-list">${postRows || '<p class="builder-status">No posts from you yet. Start with a question, a useful link, or a short guide.</p>'}</div>
         <form class="forum-admin-message" id="forum-admin-message">
             <label>
-                <span>${isTrusted() ? "Message admin" : "Apply to be trusted / message admin"}</span>
-                <textarea rows="3" name="message" placeholder="Write a short message to admin..." required></textarea>
+                <span>${isTrusted() ? "Message admin" : "Ask for contributor validation / message admin"}</span>
+                <textarea rows="3" name="message" placeholder="Write a short message to HCNY Astro..." required></textarea>
             </label>
-            <button type="submit">${isTrusted() ? "Send message" : "Apply / send"}</button>
+            <button type="submit">${isTrusted() ? "Send message" : "Send to admin"}</button>
             <p class="builder-status" data-admin-message-status></p>
         </form>
     `;
     els.userPanel.hidden = false;
     els.userPanel.querySelector("#forum-admin-message").addEventListener("submit", submitAdminMessage);
+    els.userPanel.querySelectorAll("[data-open-user-post]").forEach((button) => {
+        button.addEventListener("click", () => openThread(button.dataset.openUserPost));
+    });
+    els.userPanel.querySelectorAll("[data-edit-user-post]").forEach((button) => {
+        button.addEventListener("click", () => loadThreadForEdit(button.dataset.editUserPost));
+    });
 }
 
 async function openThread(id) {
@@ -512,7 +530,7 @@ async function renderSelectedThread() {
                 <p class="builder-status" id="comment-status"></p>
             </form>`
         : state.session
-            ? '<p class="builder-status">Only trusted contributors can comment. You can still submit posts for admin approval.</p>'
+            ? '<p class="builder-status">Comments open after contributor validation. You can still share posts for review and validation.</p>'
             : '<p class="builder-status"><a href="../admin/">Sign in</a> to comment and vote.</p>';
 
     els.thread.innerHTML = `
@@ -618,7 +636,7 @@ async function submitComment(event, parentId = null) {
         return;
     }
     if (!isTrusted()) {
-        status.textContent = "Only trusted contributors can comment.";
+        status.textContent = "Comments open after contributor validation.";
         return;
     }
     const body = form.querySelector('[name="comment-body"], #comment-body')?.value.trim();
@@ -674,7 +692,7 @@ async function voteComment(commentId, value) {
         return;
     }
     if (!isTrusted()) {
-        setStatus("Only trusted contributors can vote.");
+        setStatus("Voting opens after contributor validation.");
         return;
     }
     const { error } = await client.from("forum_comment_votes").upsert({
@@ -705,6 +723,20 @@ function editThread(thread) {
     els.compose.hidden = false;
     els.compose.classList.add("is-open");
     els.postingAs.textContent = `Editing as ${displayName()}`;
+}
+
+async function loadThreadForEdit(id) {
+    const { data, error } = await client
+        .from("forum_threads")
+        .select("*")
+        .eq("id", id)
+        .single();
+    if (error) {
+        setStatus(friendlyError(error));
+        return;
+    }
+    state.selectedThread = data;
+    editThread(data);
 }
 
 async function deleteThread(id) {
@@ -878,7 +910,7 @@ async function submitThread(event) {
     await renderAccount();
     await loadThreads();
     if (!isTrusted() && isNewThread) {
-        setStatus("Draft sent to admin. It will appear after approval.");
+        setStatus("Saved for admin validation. You can still open and edit it from Your forum space.");
         return;
     }
     if (isNewThread && result.data?.id) {
@@ -922,7 +954,7 @@ function openComposer() {
     els.thread.hidden = true;
     els.postingAs.textContent = isTrusted()
         ? `Posting as ${displayName()}`
-        : `Posting as ${displayName()} · your draft will go to admin for approval`;
+        : `Posting as ${displayName()} · your post will go to admin for validation`;
 }
 
 function openSettings(force = false) {
@@ -938,7 +970,7 @@ function openSettings(force = false) {
     els.settingsPanel.dataset.forceSettings = force ? "true" : "false";
     els.settingsClose.hidden = force;
     els.settingsIntro.textContent = force
-        ? "Before using the forum, choose your username and notification setting."
+        ? "Welcome in. Choose your username, then feel free to make a post, ask a question, or share a useful astronomy resource. Email notifications are still being tested."
         : "";
     els.settingsUsername.value = displayName();
     els.settingsNotifications.checked = state.profile?.notifications_enabled !== false;
@@ -980,6 +1012,7 @@ async function uploadForumImage(file, title) {
 
 async function submitSettings(event) {
     event.preventDefault();
+    const wasFirstSetup = els.settingsPanel.dataset.forceSettings === "true";
     const username = els.settingsUsername.value.trim();
     if (!username) {
         els.settingsStatus.textContent = "Username is required.";
@@ -1007,6 +1040,9 @@ async function submitSettings(event) {
     els.settingsPanel.hidden = true;
     els.settingsPanel.classList.remove("is-open");
     await loadThreads();
+    if (wasFirstSetup) {
+        setStatus("Welcome. You are encouraged to make a post, share a resource, or ask your first astronomy question.");
+    }
 }
 
 function closePostPanels() {

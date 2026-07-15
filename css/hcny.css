@@ -1390,6 +1390,29 @@ h1 {
     font-weight: 800;
 }
 
+.forum-status-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.forum-status-actions button {
+    min-height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.forum-status-actions button:hover {
+    background: rgba(118, 109, 255, 0.20);
+    border-color: rgba(118, 109, 255, 0.42);
+}
+
 .forum-admin-message {
     display: grid;
     gap: 10px;

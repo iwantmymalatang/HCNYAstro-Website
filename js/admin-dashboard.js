@@ -164,18 +164,19 @@ function renderUsers(users) {
     els.counts.users.textContent = `${users.length} shown`;
     els.users.innerHTML = users.length ? users.map((user) => {
         const trust = user.trust_status || (user.role === "admin" ? "trusted" : "untrusted");
+        const trustLabel = trust === "trusted" ? "validated contributor" : "new contributor";
         const isProtectedAdmin = (user.email || "").toLowerCase() === "hcnyastro@gmail.com";
         return `
             <article class="admin-row">
                 <div>
                     <strong>${escapeHtml(user.username || user.email || "User")}</strong>
-                    <span>${escapeHtml(user.email || "No email")} · ${escapeHtml(user.role || "contributor")} · ${escapeHtml(trust)}</span>
+                    <span>${escapeHtml(user.email || "No email")} · ${escapeHtml(user.role || "contributor")} · ${escapeHtml(trustLabel)}</span>
                     <p>${user.notifications_enabled === false ? "Email updates off" : "Email updates on"} · ${user.settings_completed ? "settings done" : "settings not done"} · Joined ${formatDate(user.created_at)}</p>
                 </div>
                 <div class="admin-post-actions">
                     ${isProtectedAdmin ? '<strong>Admin</strong>' : trust === "trusted"
-                        ? `<button type="button" data-user-trust="${user.id}" data-trust-value="untrusted">Make untrusted</button>`
-                        : `<button type="button" data-user-trust="${user.id}" data-trust-value="trusted">Make trusted</button>`}
+                        ? `<button type="button" data-user-trust="${user.id}" data-trust-value="untrusted">Move to new contributor</button>`
+                        : `<button type="button" data-user-trust="${user.id}" data-trust-value="trusted">Validate contributor</button>`}
                 </div>
             </article>
         `;
@@ -190,16 +191,17 @@ function renderPosts(posts) {
     els.counts.posts.textContent = `${posts.length} recent`;
     els.posts.innerHTML = posts.length ? posts.map((post) => {
         const status = post.status || "approved";
+        const statusLabel = status === "approved" ? "validated" : status === "rejected" ? "needs changes" : "waiting for validation";
         return `
             <article class="admin-row">
                 <div>
                     <strong>${escapeHtml(post.title)}</strong>
-                    <span>${escapeHtml(post.type)} · ${escapeHtml(status)} · ${post.audience === "trusted" ? "trusted only · " : ""}${post.is_pinned ? "pinned · " : ""}${escapeHtml(post.username || "Contributor")} · ${formatDate(post.created_at)}</span>
+                    <span>${escapeHtml(post.type)} · ${escapeHtml(statusLabel)} · ${post.audience === "trusted" ? "validated contributors only · " : ""}${post.is_pinned ? "pinned · " : ""}${escapeHtml(post.username || "Contributor")} · ${formatDate(post.created_at)}</span>
                     <p>${escapeHtml(post.body).slice(0, 140)}${post.body?.length > 140 ? "..." : ""}</p>
                 </div>
                 <div class="admin-post-actions">
-                    ${status === "pending" ? `<button type="button" data-approve-post="${post.id}">Approve</button><button type="button" data-reject-post="${post.id}">Reject</button>` : ""}
-                    ${status === "rejected" ? `<button type="button" data-pending-post="${post.id}">Move to pending</button>` : ""}
+                    ${status === "pending" ? `<button type="button" data-approve-post="${post.id}">Validate</button><button type="button" data-reject-post="${post.id}">Needs changes</button>` : ""}
+                    ${status === "rejected" ? `<button type="button" data-pending-post="${post.id}">Return to validation</button>` : ""}
                     <button type="button" data-pin-post="${post.id}" data-pin-value="${post.is_pinned ? "false" : "true"}">${post.is_pinned ? "Unpin" : "Pin"}</button>
                     <a class="read-link" href="../forum/?thread=${encodeURIComponent(post.id)}">Open</a>
                     <button type="button" data-delete-post="${post.id}">Delete</button>

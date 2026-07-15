@@ -4,6 +4,7 @@ const app = document.getElementById("forum-app");
 const config = {
     url: app?.dataset.supabaseUrl?.trim() || "",
     key: app?.dataset.supabaseKey?.trim() || "",
+    bucket: app?.dataset.storageBucket?.trim() || "post-images",
 };
 const client = config.url && config.key ? createClient(config.url, config.key) : null;
 
@@ -34,6 +35,9 @@ const els = {
     title: document.getElementById("forum-title"),
     tags: document.getElementById("forum-tags"),
     body: document.getElementById("forum-body"),
+    image: document.getElementById("forum-image"),
+    imageUrl: document.getElementById("forum-image-url"),
+    imagePreview: document.getElementById("forum-image-preview"),
     submit: document.getElementById("forum-submit"),
     cancelEdit: document.getElementById("forum-cancel-edit"),
 };
@@ -85,6 +89,15 @@ function renderBody(markdown) {
         .join("");
 }
 
+function renderPostImage(url, title = "") {
+    if (!url) return "";
+    return `
+        <figure class="forum-post-image">
+            <img src="${escapeHtml(url)}" alt="${escapeHtml(title ? `${title} image` : "Forum post image")}" loading="lazy">
+        </figure>
+    `;
+}
+
 function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
@@ -128,6 +141,8 @@ function displayName() {
 function resetCompose() {
     els.compose.reset();
     els.editId.value = "";
+    els.imageUrl.value = "";
+    updateImagePreview("");
     els.type.value = state.tab;
     els.submit.textContent = "Publish to forum";
     els.cancelEdit.textContent = "Close";
@@ -257,7 +272,7 @@ async function loadThreads() {
 
     const { data, error } = await client
         .from("forum_threads_with_counts")
-        .select("id,slug,type,title,body,tags,username,created_by,created_at,updated_at,comment_count")
+        .select("id,slug,type,title,body,tags,image_url,username,created_by,created_at,updated_at,comment_count")
         .eq("type", state.tab)
         .order("updated_at", { ascending: false });
 
@@ -289,6 +304,7 @@ function renderThreadList() {
                 <time>${formatDate(thread.created_at)}</time>
                 <h2><button type="button" data-open-thread="${thread.id}">${escapeHtml(thread.title)}</button></h2>
                 ${renderTags(thread.tags)}
+                ${renderPostImage(thread.image_url, thread.title)}
                 <p>${escapeHtml(thread.body).slice(0, 220)}${thread.body?.length > 220 ? "..." : ""}</p>
                 <span class="forum-meta">By ${escapeHtml(thread.username || "Contributor")} · ${thread.comment_count || 0} comments</span>
             </div>
@@ -387,6 +403,7 @@ async function renderSelectedThread() {
             <div class="admin-post-actions">${actions}${reportThreadAction}</div>
         </header>
         <div class="single-content">${renderBody(thread.body)}</div>
+        ${renderPostImage(thread.image_url, thread.title)}
         <section class="comments">
             <h2>Comments</h2>
             ${commentForm}
@@ -514,6 +531,9 @@ function editThread(thread) {
     els.title.value = thread.title || "";
     els.tags.value = normalizeTags(thread.tags).join(", ");
     els.body.value = thread.body || "";
+    els.image.value = "";
+    els.imageUrl.value = thread.image_url || "";
+    updateImagePreview(thread.image_url || "");
     els.submit.textContent = "Save forum post";
     els.cancelEdit.textContent = "Close";
     els.compose.hidden = false;
@@ -651,12 +671,23 @@ async function submitThread(event) {
     if (!title || !body) return;
 
     els.composeStatus.textContent = "Saving...";
+    let imageUrl = els.imageUrl.value || "";
+    if (els.image.files?.[0]) {
+        els.composeStatus.textContent = "Uploading PNG...";
+        try {
+            imageUrl = await uploadForumImage(els.image.files[0], title);
+        } catch (error) {
+            els.composeStatus.textContent = error.message;
+            return;
+        }
+    }
     const payload = {
         type: els.type.value,
         title,
         slug: `${slugify(title)}-${Date.now().toString(36)}`,
         body,
         tags: normalizeTags(els.tags.value),
+        image_url: imageUrl || null,
         username: displayName(),
         updated_at: new Date().toISOString(),
     };
@@ -736,6 +767,38 @@ function openSettings() {
     els.settingsUsername.focus();
 }
 
+function updateImagePreview(url) {
+    const img = els.imagePreview?.querySelector("img");
+    if (!els.imagePreview || !img) return;
+    if (!url) {
+        els.imagePreview.hidden = true;
+        img.removeAttribute("src");
+        return;
+    }
+    img.src = url;
+    els.imagePreview.hidden = false;
+}
+
+async function uploadForumImage(file, title) {
+    if (file.type !== "image/png") {
+        throw new Error("Please upload a PNG image.");
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error("PNG must be 5 MB or smaller.");
+    }
+    const safeName = slugify(title || file.name.replace(/\.png$/i, ""));
+    const path = `${state.session.user.id}/${Date.now()}-${safeName}.png`;
+    const { error } = await client.storage
+        .from(config.bucket)
+        .upload(path, file, {
+            contentType: "image/png",
+            upsert: false,
+        });
+    if (error) throw new Error(friendlyError(error));
+    const { data } = client.storage.from(config.bucket).getPublicUrl(path);
+    return data.publicUrl;
+}
+
 async function submitSettings(event) {
     event.preventDefault();
     const username = els.settingsUsername.value.trim();
@@ -794,6 +857,19 @@ async function init() {
         });
     });
     els.compose.addEventListener("submit", submitThread);
+    els.image.addEventListener("change", () => {
+        const file = els.image.files?.[0];
+        if (!file) {
+            updateImagePreview(els.imageUrl.value || "");
+            return;
+        }
+        if (file.type !== "image/png") {
+            els.composeStatus.textContent = "Please choose a PNG image.";
+            els.image.value = "";
+            return;
+        }
+        updateImagePreview(URL.createObjectURL(file));
+    });
     els.settingsPanel.addEventListener("submit", submitSettings);
     els.cancelEdit.addEventListener("click", closePostPanels);
     els.settingsClose.addEventListener("click", closePostPanels);

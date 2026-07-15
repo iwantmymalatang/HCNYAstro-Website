@@ -10,6 +10,7 @@
     id="forum-app"
     data-supabase-url="{{ .Site.Params.supabaseUrl }}"
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
+    data-storage-bucket="{{ .Site.Params.supabaseStorageBucket }}"
 >
     <div class="forum-toolbar">
         <div class="forum-tabs" role="tablist" aria-label="Forum categories">
@@ -64,6 +65,15 @@
             <span>Content</span>
             <textarea id="forum-body" rows="10" placeholder="Write your guide, documentation, or question here." required></textarea>
         </label>
+        <label>
+            <span>PNG image</span>
+            <input id="forum-image" type="file" accept="image/png">
+        </label>
+        <input id="forum-image-url" type="hidden">
+        <figure class="forum-image-preview" id="forum-image-preview" hidden>
+            <img alt="">
+            <figcaption>PNG preview</figcaption>
+        </figure>
         <div class="builder-actions">
             <button type="submit" id="forum-submit">Publish to forum</button>
         </div>

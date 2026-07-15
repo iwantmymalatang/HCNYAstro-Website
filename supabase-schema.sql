@@ -99,12 +99,15 @@ create table if not exists public.forum_threads (
   title text not null,
   slug text not null unique,
   body text not null,
+  image_url text,
   tags text[] not null default '{}',
   username text not null default 'Contributor',
   created_by uuid references auth.users(id) on delete set null default auth.uid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.forum_threads add column if not exists image_url text;
 
 create table if not exists public.forum_comments (
   id uuid primary key default gen_random_uuid(),
@@ -158,13 +161,15 @@ from public.forum_comments c
 left join public.forum_comment_votes v on v.comment_id = c.id
 group by c.id;
 
-create or replace view public.forum_threads_with_counts as
+drop view if exists public.forum_threads_with_counts;
+create view public.forum_threads_with_counts as
 select
   t.id,
   t.type,
   t.title,
   t.slug,
   t.body,
+  t.image_url,
   t.tags,
   t.username,
   t.created_by,
@@ -174,6 +179,13 @@ select
 from public.forum_threads t
 left join public.forum_comments c on c.thread_id = t.id
 group by t.id;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('post-images', 'post-images', true, 5242880, array['image/png'])
+on conflict (id) do update
+set public = true,
+    file_size_limit = 5242880,
+    allowed_mime_types = array['image/png'];
 
 create or replace function public.is_admin()
 returns boolean
@@ -463,6 +475,32 @@ on public.forum_reports
 for delete
 to authenticated
 using (public.is_admin());
+
+drop policy if exists "Forum images are public" on storage.objects;
+create policy "Forum images are public"
+on storage.objects
+for select
+using (bucket_id = 'post-images');
+
+drop policy if exists "Contributors upload forum images" on storage.objects;
+create policy "Contributors upload forum images"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'post-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "Contributors manage own forum images" on storage.objects;
+create policy "Contributors manage own forum images"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'post-images'
+  and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin())
+);
 
 drop policy if exists "Forum votes are public" on public.forum_comment_votes;
 create policy "Forum votes are public"

@@ -1241,6 +1241,32 @@ h1 {
     background: #121421;
 }
 
+.forum-image-preview,
+.forum-post-image {
+    display: grid;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
+    background: #090a13;
+}
+
+.forum-image-preview img,
+.forum-post-image img {
+    display: block;
+    width: 100%;
+    max-height: 520px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #03040a;
+}
+
+.forum-image-preview figcaption {
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
 .forum-card,
 .forum-thread .single-card {
     background: #090a13;

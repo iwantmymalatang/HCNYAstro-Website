@@ -307,6 +307,9 @@ function friendlyError(error) {
     if (message.includes("parent_id")) {
         return "Reply threads are not set up in Supabase yet. Run supabase-add-comment-replies.sql in Supabase SQL Editor, then refresh.";
     }
+    if (message.includes("forum_admin_messages") || lower.includes("row-level security")) {
+        return "Admin messages are not fully set up yet. Run supabase-pinning-audience-messages.sql in Supabase SQL Editor, then refresh.";
+    }
     if (message.includes("forum_threads") || message.includes("forum_comments") || message.includes("does not exist")) {
         return "Forum database is not set up yet. Run the latest supabase-schema.sql in Supabase SQL Editor, then refresh this page.";
     }
@@ -433,8 +436,13 @@ async function submitAdminMessage(event) {
     const status = event.currentTarget.querySelector("[data-admin-message-status]");
     const message = event.currentTarget.elements.message.value.trim();
     if (!message) return;
+    if (!state.session?.user?.id) {
+        status.textContent = "Sign in before messaging admin.";
+        return;
+    }
     status.textContent = "Sending...";
     const { error } = await client.from("forum_admin_messages").insert({
+        user_id: state.session.user.id,
         message,
         kind: isTrusted() ? "message" : "trust_application",
         username: displayName(),

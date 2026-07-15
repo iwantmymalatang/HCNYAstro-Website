@@ -1,12 +1,13 @@
 {{ define "main" }}
 <section class="hero">
-    <canvas id="orbit-canvas" class="hero-orbit" width="900" height="640" aria-label="Interactive three-body problem simulation"></canvas>
+    <canvas id="orbit-canvas" class="hero-orbit" width="900" height="640" aria-label="Real-time three-body simulation"></canvas>
     <div class="shell hero-grid">
         <div class="hero-copy">
             <h1>{{ .Title }}</h1>
             <p class="lede">{{ .Site.Params.tagline }}</p>
             <div class="quick-access" aria-label="Quick access">
-                <a href="{{ "repository/" | relURL }}">Astronomy Olympiad Handouts</a>
+                <a class="primary-action" href="{{ "repository/" | relURL }}">Browse resources</a>
+                <a class="secondary-action" href="{{ "forum/" | relURL }}">Visit forum</a>
             </div>
         </div>
     </div>
@@ -15,18 +16,18 @@
 <section class="shell section-grid">
     <a class="feature-link" href="{{ "repository/" | relURL }}">
         <span class="label">Repository</span>
-        <strong>Astronomy Olympiad Handouts</strong>
-        <span>Training material, explanations, and practice links.</span>
+        <strong>Olympiad materials</strong>
+        <span>Handouts, slides, and practice.</span>
     </a>
     <a class="feature-link" href="{{ "forum/" | relURL }}">
         <span class="label">Forum</span>
-        <strong>Guides and questions</strong>
-        <span>Sign in to share documentation, ask questions, comment, and vote.</span>
+        <strong>Ask and share</strong>
+        <span>Guides, questions, and club discussions.</span>
     </a>
     <a class="feature-link" href="{{ "about/" | relURL }}">
         <span class="label">About</span>
-        <strong>Interest group</strong>
-        <span>HCNYAstro at Hwa Chong and Nanyang Girls' High.</span>
+        <strong>Meet HCNYAstro</strong>
+        <span>Our work, history, and current EXCO.</span>
     </a>
 </section>
 {{ end }}

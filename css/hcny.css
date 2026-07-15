@@ -3041,3 +3041,244 @@ body {
 .forum-thread .single-head h1 {
     margin: 8px 0 0;
 }
+/* Final homepage system: quiet typography, a contained physical simulation, and fewer choices per block. */
+:root {
+    --bg: #0b0c0d;
+    --panel: #111315;
+    --panel-2: #17191c;
+    --line: #282b2e;
+    --text: #f3f1eb;
+    --muted: #a3a5a4;
+    --accent: #d8b36a;
+}
+
+.shell {
+    width: min(1120px, calc(100% - 48px));
+}
+
+.site-header {
+    background: rgba(11, 12, 13, 0.96);
+}
+
+.brand::before {
+    width: 23px;
+    height: 23px;
+    border: 0;
+    border-radius: 5px;
+    background: url("../favicon.svg") center / contain no-repeat;
+    box-shadow: none;
+}
+
+.hero {
+    min-height: 560px;
+    padding: 64px 0 72px;
+    background: #0b0c0d;
+}
+
+.hero-grid {
+    grid-template-columns: minmax(0, 480px);
+}
+
+.hero-copy {
+    max-width: 480px;
+}
+
+.hero h1 {
+    max-width: 520px;
+    font-size: clamp(3.5rem, 6.5vw, 5.4rem);
+    line-height: 0.96;
+    letter-spacing: -0.06em;
+}
+
+.lede {
+    max-width: 430px;
+    margin-top: 22px;
+    color: #bbbcb8;
+    font-size: 1.05rem;
+    line-height: 1.55;
+}
+
+.quick-access {
+    gap: 8px;
+    margin-top: 28px;
+}
+
+.quick-access a {
+    min-height: 40px;
+    padding: 0 13px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+}
+
+.quick-access a::after {
+    margin-left: 18px;
+}
+
+.quick-access .primary-action {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #17130c;
+}
+
+.quick-access .primary-action:hover {
+    background: #e6c47f;
+}
+
+.quick-access .secondary-action {
+    border-color: #3a3e42;
+    color: var(--text);
+}
+
+.quick-access .secondary-action:hover {
+    border-color: #62666a;
+    background: #151719;
+    color: var(--text);
+}
+
+.hero-orbit {
+    top: 50%;
+    right: max(24px, calc((100vw - 1120px) / 2));
+    width: min(48vw, 620px);
+    height: 440px;
+    transform: translateY(-50%);
+    opacity: 1;
+    filter: none;
+    pointer-events: none;
+}
+
+.section-grid {
+    gap: 10px;
+    margin-bottom: 72px;
+    padding-top: 40px;
+}
+
+.feature-link,
+.feature-link + .feature-link {
+    min-height: 126px;
+    padding: 18px;
+    border-color: var(--line);
+    border-radius: 7px;
+    background: #101214;
+}
+
+.feature-link:hover {
+    border-color: #4b4f53;
+    background: #131517;
+}
+
+.feature-link strong {
+    font-size: 1.08rem;
+}
+
+.feature-link span:last-child {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.feature-link::after {
+    color: #c8a866;
+}
+
+.site-footer {
+    background: #090a0b;
+}
+
+@media (max-width: 820px) {
+    .shell {
+        width: min(100% - 32px, 1120px);
+    }
+
+    .hero {
+        min-height: 620px;
+        padding-top: 54px;
+        padding-bottom: 340px;
+    }
+
+    .hero-copy {
+        max-width: 540px;
+    }
+
+    .hero h1 {
+        max-width: 540px;
+        font-size: clamp(3.3rem, 13vw, 5.2rem);
+    }
+
+    .hero-orbit {
+        top: auto;
+        right: 16px;
+        bottom: 24px;
+        left: 16px;
+        width: calc(100% - 32px);
+        height: 270px;
+        transform: none;
+        opacity: 1;
+    }
+
+    .section-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .feature-link,
+    .feature-link + .feature-link {
+        min-height: 120px;
+        padding: 16px;
+    }
+}
+
+@media (max-width: 620px) {
+    .hero {
+        min-height: 630px;
+        padding-bottom: 320px;
+    }
+
+    .hero h1 {
+        font-size: clamp(3rem, 16vw, 4.4rem);
+    }
+
+    .quick-access {
+        flex-wrap: nowrap;
+    }
+
+    .quick-access a {
+        justify-content: space-between;
+        min-width: 0;
+    }
+
+    .quick-access a::after {
+        margin-left: 10px;
+    }
+
+    .hero-orbit {
+        bottom: 20px;
+        height: 230px;
+    }
+
+    .section-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding-top: 28px;
+    }
+
+    .feature-link,
+    .feature-link + .feature-link {
+        min-height: 92px;
+        padding: 15px;
+    }
+
+    .feature-link::after {
+        align-self: center;
+    }
+}
+
+@media (max-width: 420px) {
+    .quick-access {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .quick-access a {
+        padding: 0 10px;
+        font-size: 0.8rem;
+    }
+
+}

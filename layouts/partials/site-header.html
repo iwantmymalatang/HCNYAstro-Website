@@ -9,7 +9,14 @@
                     {{ $menuURL := .URL | relLangURL }}
                     <a href="{{ $menuURL }}"{{ if or ($.IsMenuCurrent "main" .) (eq $.RelPermalink $menuURL) }} aria-current="page"{{ end }}>{{ .Name }}</a>
                 {{ end }}
-                <a class="login-link" href="{{ "admin/" | relURL }}">Login</a>
+                <a
+                    class="login-link"
+                    href="{{ "admin/" | relURL }}"
+                    data-header-auth
+                    data-supabase-url="{{ .Site.Params.supabaseUrl }}"
+                    data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
+                    data-home-url="{{ .Site.Home.RelPermalink }}"
+                >Login</a>
             </nav>
         </div>
     </div>

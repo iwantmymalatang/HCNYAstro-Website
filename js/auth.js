@@ -76,7 +76,7 @@ async function init() {
                 status.textContent = authErrorMessage(result.error);
                 return;
             }
-            status.textContent = "Magic link sent. Check your email, then open the link on this device.";
+            status.textContent = "Magic link sent. Check your inbox, spam, or junk folder, then open the link on this device.";
         } catch (error) {
             status.textContent = authErrorMessage(error);
         } finally {

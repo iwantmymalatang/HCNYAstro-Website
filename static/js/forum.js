@@ -25,6 +25,7 @@ const els = {
     thread: document.getElementById("forum-thread"),
     newPost: document.getElementById("forum-new-post"),
     settingsPanel: document.getElementById("forum-settings-panel"),
+    settingsIntro: document.getElementById("forum-settings-intro"),
     settingsUsername: document.getElementById("forum-settings-username"),
     settingsNotifications: document.getElementById("forum-settings-notifications"),
     settingsStatus: document.getElementById("forum-settings-status"),
@@ -118,6 +119,10 @@ function isAdmin() {
     return isHcnyAdmin() || state.profile?.role === "admin";
 }
 
+function isTrusted() {
+    return isAdmin() || state.profile?.trust_status === "trusted";
+}
+
 function isEmailConfirmed() {
     return Boolean(state.session);
 }
@@ -175,7 +180,7 @@ async function refreshProfile() {
 
     const { data, error } = await client
         .from("profiles")
-        .select("id,email,username,role,notifications_enabled")
+        .select("id,email,username,role,trust_status,settings_completed,notifications_enabled")
         .eq("id", state.session.user.id)
         .single();
     if (error) {
@@ -186,6 +191,8 @@ async function refreshProfile() {
                 email: state.session.user.email,
                 username: state.session.user.email?.split("@")[0] || "Contributor",
                 role: "contributor",
+                trust_status: "untrusted",
+                settings_completed: false,
                 notifications_enabled: true,
             };
             return;
@@ -195,7 +202,13 @@ async function refreshProfile() {
     }
     state.profile = data;
     if (isHcnyAdmin()) {
-        state.profile = { ...state.profile, role: "admin", email: state.session.user.email || state.profile.email };
+        state.profile = {
+            ...state.profile,
+            role: "admin",
+            trust_status: "trusted",
+            settings_completed: true,
+            email: state.session.user.email || state.profile.email,
+        };
     }
 }
 
@@ -236,7 +249,7 @@ async function renderAccount() {
     els.account.innerHTML = `
         <button type="button" id="forum-new-post">New post</button>
         <span>${renderUsername(displayName())}</span>
-        ${isAdmin() ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
+        ${isAdmin() ? '<strong>Admin</strong>' : `<strong>${isTrusted() ? "Trusted" : "Untrusted"}</strong>`}
         ${isAdmin() ? '<a class="read-link" href="../admin-dashboard/">Dashboard</a>' : ""}
         ${isAdmin() ? '<button type="button" id="forum-reports">Reports</button>' : ""}
         <button type="button" id="forum-settings">My settings</button>
@@ -282,7 +295,7 @@ async function loadThreads() {
 
     const { data, error } = await client
         .from("forum_threads_with_counts")
-        .select("id,slug,type,title,body,tags,image_url,username,created_by,created_at,updated_at,comment_count")
+        .select("id,slug,type,title,body,tags,image_url,username,created_by,status,created_at,updated_at,comment_count")
         .eq("type", state.tab)
         .order("updated_at", { ascending: false });
 
@@ -390,7 +403,7 @@ async function renderSelectedThread() {
     const reportThreadAction = state.session
         ? '<button type="button" data-report-thread>Report</button>'
         : "";
-    const commentForm = state.session && isEmailConfirmed()
+    const commentForm = state.session && isEmailConfirmed() && isTrusted()
         ? `<form class="comment-form" id="comment-form">
                 <label>
                     <span>Comment as ${escapeHtml(displayName())}</span>
@@ -400,7 +413,7 @@ async function renderSelectedThread() {
                 <p class="builder-status" id="comment-status"></p>
             </form>`
         : state.session
-            ? '<p class="builder-status">Confirm your email to comment and vote.</p>'
+            ? '<p class="builder-status">Only trusted contributors can comment. You can still submit posts for admin approval.</p>'
             : '<p class="builder-status"><a href="../admin/">Sign in</a> to comment and vote.</p>';
 
     els.thread.innerHTML = `
@@ -450,10 +463,10 @@ function renderComment(comment, groups, depth) {
     const deleteAction = canDeleteComment(comment)
         ? `<button type="button" data-delete-comment="${comment.id}">Delete</button>`
         : "";
-    const actions = state.session
+    const actions = state.session && isTrusted()
         ? `<button type="button" data-reply-comment="${comment.id}">Reply</button><button type="button" data-report-comment="${comment.id}">Report</button>${deleteAction}`
         : "";
-    const replyForm = state.session
+    const replyForm = state.session && isTrusted()
         ? `<form class="reply-form" data-reply-form="${comment.id}" hidden>
                 <textarea name="comment-body" rows="3" placeholder="Reply to ${escapeHtml(comment.username || "Contributor")}..." required></textarea>
                 <div class="builder-actions">
@@ -466,9 +479,9 @@ function renderComment(comment, groups, depth) {
         <div class="comment-thread" style="--reply-depth: ${Math.min(depth, 5)}">
             <article class="comment">
                 <div class="comment-votes">
-                    <button type="button" data-vote-comment="${comment.id}" data-vote-value="1">▲</button>
+                    ${isTrusted() ? `<button type="button" data-vote-comment="${comment.id}" data-vote-value="1">▲</button>` : ""}
                     <strong>${comment.score || 0}</strong>
-                    <button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>
+                    ${isTrusted() ? `<button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>` : ""}
                 </div>
                 <div>
                     <div class="forum-meta">${renderUsername(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
@@ -497,6 +510,10 @@ async function submitComment(event, parentId = null) {
         status.textContent = "Confirm your email before commenting.";
         return;
     }
+    if (!isTrusted()) {
+        status.textContent = "Only trusted contributors can comment.";
+        return;
+    }
     const body = form.querySelector('[name="comment-body"], #comment-body')?.value.trim();
     if (!body) return;
     status.textContent = "Saving comment...";
@@ -521,6 +538,10 @@ async function voteComment(commentId, value) {
     }
     if (!isEmailConfirmed()) {
         setStatus("Confirm your email before voting.");
+        return;
+    }
+    if (!isTrusted()) {
+        setStatus("Only trusted contributors can vote.");
         return;
     }
     const { error } = await client.from("forum_comment_votes").upsert({
@@ -699,6 +720,7 @@ async function submitThread(event) {
         tags: normalizeTags(els.tags.value),
         image_url: imageUrl || null,
         username: displayName(),
+        status: isTrusted() ? "approved" : "pending",
         updated_at: new Date().toISOString(),
     };
 
@@ -719,6 +741,10 @@ async function submitThread(event) {
     resetCompose();
     await renderAccount();
     await loadThreads();
+    if (!isTrusted() && isNewThread) {
+        setStatus("Draft sent to admin. It will appear after approval.");
+        return;
+    }
     if (isNewThread && result.data?.id) {
         await notifyNewForumPost(payload, result.data.id);
     }
@@ -758,10 +784,12 @@ function openComposer() {
     els.settingsPanel.hidden = true;
     els.settingsPanel.classList.remove("is-open");
     els.thread.hidden = true;
-    els.postingAs.textContent = `Posting as ${displayName()}`;
+    els.postingAs.textContent = isTrusted()
+        ? `Posting as ${displayName()}`
+        : `Posting as ${displayName()} · your draft will go to admin for approval`;
 }
 
-function openSettings() {
+function openSettings(force = false) {
     if (!state.session) {
         window.location.href = "../admin/";
         return;
@@ -771,6 +799,11 @@ function openSettings() {
     els.thread.hidden = true;
     els.settingsPanel.hidden = false;
     els.settingsPanel.classList.add("is-open");
+    els.settingsPanel.dataset.forceSettings = force ? "true" : "false";
+    els.settingsClose.hidden = force;
+    els.settingsIntro.textContent = force
+        ? "Before using the forum, choose your username and notification setting."
+        : "";
     els.settingsUsername.value = displayName();
     els.settingsNotifications.checked = state.profile?.notifications_enabled !== false;
     els.settingsStatus.textContent = "";
@@ -826,6 +859,7 @@ async function submitSettings(event) {
         .update({
             username,
             notifications_enabled: els.settingsNotifications.checked,
+            settings_completed: true,
         })
         .eq("id", state.session.user.id);
     if (error) {
@@ -836,6 +870,7 @@ async function submitSettings(event) {
     await renderAccount();
     els.settingsPanel.hidden = true;
     els.settingsPanel.classList.remove("is-open");
+    await loadThreads();
 }
 
 function closePostPanels() {
@@ -857,6 +892,9 @@ async function init() {
     await refreshProfile();
     await renderAccount();
     resetCompose();
+    if (state.session && state.profile && !state.profile.settings_completed) {
+        openSettings(true);
+    }
 
     document.querySelectorAll("[data-forum-tab]").forEach((button) => {
         button.addEventListener("click", async () => {

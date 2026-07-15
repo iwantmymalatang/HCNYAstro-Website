@@ -122,7 +122,7 @@ function isAdmin() {
 async function loadProfile() {
     const { data, error } = await client
         .from("profiles")
-        .select("id,email,username,role,notifications_enabled,created_at")
+        .select("id,email,username,role,trust_status,settings_completed,notifications_enabled,created_at")
         .eq("id", state.session.user.id)
         .single();
     if (error) {
@@ -133,6 +133,7 @@ async function loadProfile() {
                 email: state.session.user.email,
                 username: state.session.user.email?.split("@")[0] || "Admin",
                 role: "contributor",
+                trust_status: "untrusted",
             };
             return;
         }
@@ -180,29 +181,59 @@ function renderReports(reports) {
 
 function renderUsers(users) {
     els.counts.users.textContent = `${users.length} shown`;
-    els.users.innerHTML = users.length ? users.map((user) => `
-        <article class="admin-row">
-            <div>
-                <strong>${escapeHtml(user.username || user.email || "User")}</strong>
-                <span>${escapeHtml(user.email || "No email")} · ${escapeHtml(user.role || "contributor")}</span>
-                <p>${user.notifications_enabled === false ? "Email updates off" : "Email updates on"} · Joined ${formatDate(user.created_at)}</p>
-            </div>
-        </article>
-    `).join("") : empty("No users found.");
+    els.users.innerHTML = users.length ? users.map((user) => {
+        const trust = user.trust_status || (user.role === "admin" ? "trusted" : "untrusted");
+        const isProtectedAdmin = (user.email || "").toLowerCase() === "hcnyastro@gmail.com";
+        return `
+            <article class="admin-row">
+                <div>
+                    <strong>${escapeHtml(user.username || user.email || "User")}</strong>
+                    <span>${escapeHtml(user.email || "No email")} · ${escapeHtml(user.role || "contributor")} · ${escapeHtml(trust)}</span>
+                    <p>${user.notifications_enabled === false ? "Email updates off" : "Email updates on"} · ${user.settings_completed ? "settings done" : "settings not done"} · Joined ${formatDate(user.created_at)}</p>
+                </div>
+                <div class="admin-post-actions">
+                    ${isProtectedAdmin ? '<strong>Admin</strong>' : trust === "trusted"
+                        ? `<button type="button" data-user-trust="${user.id}" data-trust-value="untrusted">Make untrusted</button>`
+                        : `<button type="button" data-user-trust="${user.id}" data-trust-value="trusted">Make trusted</button>`}
+                </div>
+            </article>
+        `;
+    }).join("") : empty("No users found.");
+
+    els.users.querySelectorAll("[data-user-trust]").forEach((button) => {
+        button.addEventListener("click", () => updateUserTrust(button.dataset.userTrust, button.dataset.trustValue));
+    });
 }
 
 function renderPosts(posts) {
     els.counts.posts.textContent = `${posts.length} recent`;
-    els.posts.innerHTML = posts.length ? posts.map((post) => `
-        <article class="admin-row">
-            <div>
-                <strong>${escapeHtml(post.title)}</strong>
-                <span>${escapeHtml(post.type)} · ${escapeHtml(post.username || "Contributor")} · ${formatDate(post.created_at)}</span>
-                <p>${escapeHtml(post.body).slice(0, 140)}${post.body?.length > 140 ? "..." : ""}</p>
-            </div>
-            <a class="read-link" href="../forum/?thread=${encodeURIComponent(post.id)}">Open</a>
-        </article>
-    `).join("") : empty("No posts yet.");
+    els.posts.innerHTML = posts.length ? posts.map((post) => {
+        const status = post.status || "approved";
+        return `
+            <article class="admin-row">
+                <div>
+                    <strong>${escapeHtml(post.title)}</strong>
+                    <span>${escapeHtml(post.type)} · ${escapeHtml(status)} · ${escapeHtml(post.username || "Contributor")} · ${formatDate(post.created_at)}</span>
+                    <p>${escapeHtml(post.body).slice(0, 140)}${post.body?.length > 140 ? "..." : ""}</p>
+                </div>
+                <div class="admin-post-actions">
+                    ${status === "pending" ? `<button type="button" data-approve-post="${post.id}">Approve</button><button type="button" data-reject-post="${post.id}">Reject</button>` : ""}
+                    <a class="read-link" href="../forum/?thread=${encodeURIComponent(post.id)}">Open</a>
+                    <button type="button" data-delete-post="${post.id}">Delete</button>
+                </div>
+            </article>
+        `;
+    }).join("") : empty("No posts yet.");
+
+    els.posts.querySelectorAll("[data-approve-post]").forEach((button) => {
+        button.addEventListener("click", () => updatePostStatus(button.dataset.approvePost, "approved"));
+    });
+    els.posts.querySelectorAll("[data-reject-post]").forEach((button) => {
+        button.addEventListener("click", () => updatePostStatus(button.dataset.rejectPost, "rejected"));
+    });
+    els.posts.querySelectorAll("[data-delete-post]").forEach((button) => {
+        button.addEventListener("click", () => deletePost(button.dataset.deletePost));
+    });
 }
 
 function renderComments(comments) {
@@ -294,20 +325,21 @@ async function loadDashboard() {
         els.metrics.comments.textContent = commentCount;
         els.metrics.reports.textContent = reportCount;
 
-        const [reportsResult, usersResult, postsResult, commentsResult] = await Promise.all([
+        const [reportsResult, usersResult, pendingPostsResult, postsResult, commentsResult] = await Promise.all([
             client.from("forum_reports").select("id,thread_id,comment_id,reason,status,username,created_at").eq("status", "open").order("created_at", { ascending: false }).limit(20),
-            client.from("profiles").select("id,email,username,role,notifications_enabled,created_at").order("created_at", { ascending: false }).limit(50),
-            client.from("forum_threads").select("id,type,title,body,username,created_at").order("created_at", { ascending: false }).limit(10),
+            client.from("profiles").select("id,email,username,role,trust_status,settings_completed,notifications_enabled,created_at").order("created_at", { ascending: false }).limit(50),
+            client.from("forum_threads").select("id,type,title,body,username,status,created_at").eq("status", "pending").order("created_at", { ascending: false }).limit(20),
+            client.from("forum_threads").select("id,type,title,body,username,status,created_at").neq("status", "pending").order("created_at", { ascending: false }).limit(10),
             client.from("forum_comments_with_scores").select("id,thread_id,body,username,created_at,score").order("created_at", { ascending: false }).limit(10),
         ]);
 
-        for (const result of [reportsResult, usersResult, postsResult, commentsResult]) {
+        for (const result of [reportsResult, usersResult, pendingPostsResult, postsResult, commentsResult]) {
             if (result.error) throw result.error;
         }
 
         renderReports(reportsResult.data || []);
         renderUsers(usersResult.data || []);
-        renderPosts(postsResult.data || []);
+        renderPosts([...(pendingPostsResult.data || []), ...(postsResult.data || [])]);
         renderComments(commentsResult.data || []);
         await loadEditablePage();
     } catch (error) {
@@ -315,6 +347,40 @@ async function loadDashboard() {
     } finally {
         els.body.classList.remove("is-loading");
     }
+}
+
+async function updateUserTrust(id, trustStatus) {
+    const { error } = await client
+        .from("profiles")
+        .update({ trust_status: trustStatus, updated_at: new Date().toISOString() })
+        .eq("id", id);
+    if (error) {
+        setGate(error.message || "Could not update user trust.");
+        return;
+    }
+    await loadDashboard();
+}
+
+async function updatePostStatus(id, status) {
+    const { error } = await client
+        .from("forum_threads")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("id", id);
+    if (error) {
+        setGate(error.message || "Could not update post.");
+        return;
+    }
+    await loadDashboard();
+}
+
+async function deletePost(id) {
+    if (!window.confirm("Delete this forum post?")) return;
+    const { error } = await client.from("forum_threads").delete().eq("id", id);
+    if (error) {
+        setGate(error.message || "Could not delete post.");
+        return;
+    }
+    await loadDashboard();
 }
 
 async function dismissReport(id) {

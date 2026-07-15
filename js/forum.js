@@ -95,7 +95,7 @@ function renderBody(markdown) {
         .join("");
 }
 
-function plainPreview(markdown, maxLength = 220) {
+function plainPreview(markdown, maxLength = 130) {
     const text = String(markdown || "")
         .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
@@ -345,6 +345,8 @@ async function loadThreads() {
         return;
     }
     setStatus("Loading forum...");
+    app.classList.remove("is-reading");
+    document.querySelector(".forum-head")?.removeAttribute("hidden");
     els.thread.hidden = true;
 
     const { data, error } = await client
@@ -378,15 +380,18 @@ function renderThreadList() {
         return;
     }
     els.list.innerHTML = state.threads.map((thread) => `
-        <article class="post-card forum-card" data-thread-id="${thread.id}">
-            <div>
+        <article class="post-card forum-card" data-thread-id="${thread.id}" data-pinned="${thread.is_pinned}">
+            <div class="forum-card-kicker">
+                ${thread.is_pinned ? '<span class="pinned-label">Pinned</span>' : ""}
                 <time>${formatDate(thread.created_at)}</time>
-                <h2><button type="button" data-open-thread="${thread.id}">${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</button></h2>
                 ${renderTags(thread.tags)}
-                <p>${escapeHtml(plainPreview(thread.body))}</p>
-                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor", thread.is_admin_author)} · ${thread.audience === "trusted" ? "Validated contributors only · " : ""}${thread.comment_count || 0} comments</span>
             </div>
-            <button class="read-link" type="button" data-open-thread="${thread.id}">Open</button>
+            <h2><button type="button" data-open-thread="${thread.id}">${escapeHtml(thread.title)}</button></h2>
+            <p>${escapeHtml(plainPreview(thread.body))}</p>
+            <div class="forum-card-footer">
+                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor", thread.is_admin_author)} · ${thread.audience === "trusted" ? "Validated only · " : ""}${thread.comment_count || 0} comments</span>
+                <button class="read-link" type="button" data-open-thread="${thread.id}" aria-label="View ${escapeHtml(thread.title)}">View →</button>
+            </div>
         </article>
     `).join("");
 
@@ -474,6 +479,8 @@ async function openThread(id) {
     }
 
     state.selectedThread = data;
+    app.classList.add("is-reading");
+    document.querySelector(".forum-head")?.setAttribute("hidden", "");
     els.list.innerHTML = "";
     els.thread.hidden = false;
     await renderSelectedThread();
@@ -583,9 +590,12 @@ async function renderSelectedThread() {
     els.thread.innerHTML = `
         <button class="back-link" type="button" data-back-forum>← Back</button>
         <header class="single-head">
-            <time>${formatDate(thread.created_at)}</time>
-            <h1>${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</h1>
-            ${renderTags(thread.tags)}
+            <div class="forum-card-kicker">
+                ${thread.is_pinned ? '<span class="pinned-label">Pinned</span>' : ""}
+                <time>${formatDate(thread.created_at)}</time>
+                ${renderTags(thread.tags)}
+            </div>
+            <h1>${escapeHtml(thread.title)}</h1>
             <p class="forum-meta">By ${renderUsername(thread.username || "Contributor", thread.is_admin_author)}</p>
             <div class="admin-post-actions">${actions}${reportThreadAction}</div>
         </header>

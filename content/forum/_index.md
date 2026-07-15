@@ -4,4 +4,4 @@ layout = "forum"
 draft = false
 +++
 
-Guides, documentation, and questions from HCNY Astronomy contributors.
+Browse astronomy guides, share what you know, or ask the club a question.

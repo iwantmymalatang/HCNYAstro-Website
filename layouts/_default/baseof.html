@@ -7,6 +7,7 @@
     <meta name="keywords" content="{{ .Site.Params.keywords }}">
     <meta name="theme-color" content="#070a12">
     <link rel="canonical" href="{{ .Permalink }}">
+    <link rel="icon" type="image/svg+xml" href="{{ "favicon.svg" | relURL }}">
     <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
     <link rel="stylesheet" href="{{ "css/hcny.css" | relURL }}?v={{ now.Unix }}">
 </head>

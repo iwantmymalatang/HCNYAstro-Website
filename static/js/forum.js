@@ -93,6 +93,19 @@ function renderBody(markdown) {
         .join("");
 }
 
+function plainPreview(markdown, maxLength = 220) {
+    const text = String(markdown || "")
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+        .replace(/\[([^\]]+)\]\[[^\]]+\]/g, "$1")
+        .replace(/\[([^\[\]]+)\[[^\]]+\]/g, "$1")
+        .replace(/`{1,3}([^`]+)`{1,3}/g, "$1")
+        .replace(/[*_~>#-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    return text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
+}
+
 function renderPostImage(url, title = "") {
     if (!url) return "";
     return `
@@ -340,8 +353,7 @@ function renderThreadList() {
                 <time>${formatDate(thread.created_at)}</time>
                 <h2><button type="button" data-open-thread="${thread.id}">${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</button></h2>
                 ${renderTags(thread.tags)}
-                ${renderPostImage(thread.image_url, thread.title)}
-                <p>${escapeHtml(thread.body).slice(0, 220)}${thread.body?.length > 220 ? "..." : ""}</p>
+                <p>${escapeHtml(plainPreview(thread.body))}</p>
                 <span class="forum-meta">By ${renderUsername(thread.username || "Contributor")} · ${thread.audience === "trusted" ? "Trusted only · " : ""}${thread.comment_count || 0} comments</span>
             </div>
             <button class="read-link" type="button" data-open-thread="${thread.id}">Open</button>

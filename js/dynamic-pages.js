@@ -16,7 +16,7 @@ async function loadDynamicPage({ force = false } = {}) {
     const content = article.querySelector(".single-content");
     if (!content) return;
 
-    const url = `${supabaseUrl}/rest/v1/content_pages?slug=eq.${encodeURIComponent(slug)}&select=title,body,updated_at&_=${Date.now()}`;
+    const url = `${supabaseUrl}/rest/v1/content_pages?slug=eq.${encodeURIComponent(slug)}&select=title,body,updated_at`;
     let response;
     try {
         response = await fetch(url, {

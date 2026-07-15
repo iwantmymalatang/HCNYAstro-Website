@@ -1347,29 +1347,31 @@ h1 {
 
 .forum-user-panel {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) minmax(280px, 0.9fr);
-    gap: 14px;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1fr) minmax(220px, 0.75fr);
+    gap: 10px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 18px;
+    border-radius: 14px;
     background: #090a13;
-    padding: 16px;
+    padding: 10px;
 }
 
 .forum-user-panel h2 {
-    margin: 0 0 8px;
+    margin: 0 0 5px;
     color: #ffffff;
-    font-size: 1.05rem;
+    font-size: 0.98rem;
 }
 
 .forum-user-panel p {
     margin: 0;
     color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
 }
 
 .forum-status-list {
     display: grid;
-    gap: 8px;
-    max-height: min(245px, 32vh);
+    gap: 6px;
+    max-height: min(190px, 28vh);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 4px;
@@ -1386,11 +1388,11 @@ h1 {
 
 .forum-status-list article {
     display: grid;
-    gap: 4px;
+    gap: 3px;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 14px;
+    border-radius: 10px;
     background: #121421;
-    padding: 10px 12px;
+    padding: 8px 10px;
 }
 
 .forum-status-list strong {
@@ -1412,17 +1414,17 @@ h1 {
 .forum-status-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 4px;
+    gap: 6px;
+    margin-top: 2px;
 }
 
 .forum-status-actions button {
-    min-height: 34px;
+    min-height: 28px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.06);
     color: #ffffff;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 850;
     cursor: pointer;
 }
@@ -1434,7 +1436,7 @@ h1 {
 
 .forum-admin-message {
     display: grid;
-    gap: 10px;
+    gap: 7px;
 }
 
 .forum-admin-message label {
@@ -1450,23 +1452,26 @@ h1 {
 }
 
 .forum-admin-message textarea {
-    min-height: 92px;
+    min-height: 58px;
     border: 1px solid rgba(255, 255, 255, 0.13);
-    border-radius: 14px;
+    border-radius: 10px;
     background: #121421;
     color: #ffffff;
     font: inherit;
-    padding: 11px 12px;
+    padding: 8px 10px;
     resize: vertical;
 }
 
 .forum-admin-message button {
-    min-height: 40px;
+    justify-self: start;
+    min-height: 30px;
+    padding: 0 13px;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
+    border-radius: 999px;
     background: #ffffff;
     color: #05060b;
     font: inherit;
+    font-size: 0.82rem;
     font-weight: 900;
     cursor: pointer;
 }

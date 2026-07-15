@@ -199,6 +199,7 @@ function renderPosts(posts) {
                 </div>
                 <div class="admin-post-actions">
                     ${status === "pending" ? `<button type="button" data-approve-post="${post.id}">Approve</button><button type="button" data-reject-post="${post.id}">Reject</button>` : ""}
+                    ${status === "rejected" ? `<button type="button" data-pending-post="${post.id}">Move to pending</button>` : ""}
                     <button type="button" data-pin-post="${post.id}" data-pin-value="${post.is_pinned ? "false" : "true"}">${post.is_pinned ? "Unpin" : "Pin"}</button>
                     <a class="read-link" href="../forum/?thread=${encodeURIComponent(post.id)}">Open</a>
                     <button type="button" data-delete-post="${post.id}">Delete</button>
@@ -212,6 +213,9 @@ function renderPosts(posts) {
     });
     els.posts.querySelectorAll("[data-reject-post]").forEach((button) => {
         button.addEventListener("click", () => updatePostStatus(button.dataset.rejectPost, "rejected"));
+    });
+    els.posts.querySelectorAll("[data-pending-post]").forEach((button) => {
+        button.addEventListener("click", () => updatePostStatus(button.dataset.pendingPost, "pending"));
     });
     els.posts.querySelectorAll("[data-delete-post]").forEach((button) => {
         button.addEventListener("click", () => deletePost(button.dataset.deletePost));

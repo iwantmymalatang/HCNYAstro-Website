@@ -24,6 +24,7 @@
                 <span id="admin-email"></span>
             </div>
             <div class="admin-post-actions">
+                <button type="button" id="admin-export-trusted">Trusted emails CSV</button>
                 <button type="button" id="admin-refresh">Refresh</button>
                 <button type="button" id="admin-logout">Log out</button>
             </div>
@@ -80,6 +81,14 @@
         </section>
 
         <div class="admin-dashboard-grid">
+            <section class="admin-panel">
+                <div class="admin-panel-head">
+                    <h2>Admin messages</h2>
+                    <span id="messages-count">0 open</span>
+                </div>
+                <div class="admin-list" id="admin-messages"></div>
+            </section>
+
             <section class="admin-panel">
                 <div class="admin-panel-head">
                     <h2>Reports</h2>

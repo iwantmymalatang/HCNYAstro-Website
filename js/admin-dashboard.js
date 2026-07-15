@@ -12,6 +12,7 @@ const els = {
     name: document.getElementById("admin-name"),
     email: document.getElementById("admin-email"),
     refresh: document.getElementById("admin-refresh"),
+    exportTrusted: document.getElementById("admin-export-trusted"),
     logout: document.getElementById("admin-logout"),
     metrics: {
         users: document.getElementById("metric-users"),
@@ -24,8 +25,10 @@ const els = {
         users: document.getElementById("users-count"),
         posts: document.getElementById("posts-count"),
         comments: document.getElementById("comments-count"),
+        messages: document.getElementById("messages-count"),
     },
     reports: document.getElementById("admin-reports"),
+    messages: document.getElementById("admin-messages"),
     users: document.getElementById("admin-users"),
     posts: document.getElementById("admin-posts"),
     comments: document.getElementById("admin-comments"),
@@ -45,54 +48,8 @@ const state = {
 };
 
 const pageFallbacks = {
-    about: {
-        title: "About",
-        body: `HCNYAstro is an astronomy interest group from Hwa Chong Institution (High School) and Nanyang Girls' High School.
-
-We collect resources for students to learn more about astronomy, organise events such as stargazing to give students a chance at practical experiences, and other lessons.
-
-The interest group has a long history going far back, even before the 2020s. Originally, it started as a small, informal interest group that emerged from the pure love of astronomy, with a few people hosting sessions where HCIHS students would go over to the JC Astro club and sit in on their lessons.
-
-HCNYAstro was founded in its current form in 2021 when the HS Astronomy interest group expanded to encompass NYGH as well, under the guidance of our senior Tey Yi Fan (graduated 2022). From there, it grew into its own independent interest group, organising its own online lessons, practical sessions, and even collaborating with other schools.
-
-We hope that in the years to come, the interest group will continue to spark a love for astronomy in many more generations of young astronomers, from HCI, NYGH, and the rest of Singapore.
-
-*Our current EXCO line-up*
-
-- Wang Xingshuo, HCI
-- Ng Chyng Yi, NYGH
-- Nay Myo Win, HCI
-- Teh Jiaying, NYGH
-- Loke Kei Nga Tricia, NYGH
-- Zhao Wenying, NYGH
-- Liu Haochen, HCI`,
-    },
-    repository: {
-        title: "Repository",
-        body: `*Resources*
-
-[AOGuide][https://www.aoguide.app/] contains the core astronomy olympiad content you will need. It is strongest as a reference, so use the handouts and practice materials alongside it for olympiad technique.
-
-*Handouts*
-
-To be added soon
-
-[Handout explanation videos][https://www.aoguide.app/] are December 2026 training resources prepared for HCNY Astronomy contributors.
-
-*Lesson slides and materials*
-
-Open the [lesson slides and materials][https://drive.google.com/drive/folders/11fzTbXRS3pTrSB5io9DIzJJqmk0Y2_7j?usp=drive_link] folder for class slides, worksheets, and extra lesson materials.
-
-- [HCNYAstro Session 1][https://docs.google.com/presentation/d/1e_t3ULCi6ijZcE73-1k4_UN_SuuyT6LzJFOwCDd2g6w/edit?usp=drive_web]
-- [HCNYAstro Session 2][https://docs.google.com/presentation/d/1EQnfo_FA1UNS9HjMl3rysR4F2O2CLL7aeagkw5tSFJk/edit?usp=drive_web]
-- [COM Session 1: Centre of Mass][https://docs.google.com/presentation/d/1-H0OFl6gO9_XGZTgzlqLa2xzynD_i77Za2AZCmOXi8A/edit?usp=drive_web]
-- [HCNY Session 4][https://docs.google.com/presentation/d/1a6HJCLElkrimyBBRKaw137ZyUyIcqiqjYCs63K6pugY/edit?usp=drive_web]
-- [HCNY Session 4 Final Version][https://docs.google.com/presentation/d/1quKnZl74dr9tznAyepwtp6qVe0Wy4-aqSFX4Tebm7vU/edit?usp=drive_web]
-- [Prerequisite Mechanics for HCNY Astro][https://docs.google.com/presentation/d/1xRxJJrZyTPVHY0u0ooZTqfCkak07_Gh5x09r2G0KVdc/edit?usp=drive_web]
-- [Prerequisite Mechanics (Simplified)][https://docs.google.com/presentation/d/1LuJcgeLFQJcY9OkRdGHtIA0fzLMhQrjopXqw_j6xmOY/edit?usp=drive_web]
-- [Celestial Mechanics (All)][https://docs.google.com/presentation/d/1TAZdBWjSx2xzm0sYXhiR6xviq3uIiOBW1lq_L1ZDJ58/edit?usp=drive_web]
-- [Relativity][https://docs.google.com/presentation/d/1MHSKJTDXFXbXp9K7FLfAExN6C33r7FoM3p_XNV2SFFU/edit?usp=drive_web]`,
-    },
+    about: { title: "About", body: "" },
+    repository: { title: "Repository", body: "" },
 };
 
 function formatDate(value) {
@@ -179,6 +136,30 @@ function renderReports(reports) {
     });
 }
 
+function renderMessages(messages) {
+    els.counts.messages.textContent = `${messages.length} open`;
+    els.messages.innerHTML = messages.length ? messages.map((message) => `
+        <article class="admin-row">
+            <div>
+                <strong>${escapeHtml(message.kind === "trust_application" ? "Trust application" : "Message")}</strong>
+                <span>${escapeHtml(message.username || "Contributor")} · ${formatDate(message.created_at)}</span>
+                <p>${escapeHtml(message.message)}</p>
+            </div>
+            <div class="admin-post-actions">
+                ${message.user_id ? `<button type="button" data-message-trust="${message.user_id}" data-message-id="${message.id}">Trust user</button>` : ""}
+                <button type="button" data-close-message="${message.id}">Close</button>
+            </div>
+        </article>
+    `).join("") : empty("No open messages.");
+
+    els.messages.querySelectorAll("[data-message-trust]").forEach((button) => {
+        button.addEventListener("click", () => trustFromMessage(button.dataset.messageTrust, button.dataset.messageId));
+    });
+    els.messages.querySelectorAll("[data-close-message]").forEach((button) => {
+        button.addEventListener("click", () => closeMessage(button.dataset.closeMessage));
+    });
+}
+
 function renderUsers(users) {
     els.counts.users.textContent = `${users.length} shown`;
     els.users.innerHTML = users.length ? users.map((user) => {
@@ -213,11 +194,12 @@ function renderPosts(posts) {
             <article class="admin-row">
                 <div>
                     <strong>${escapeHtml(post.title)}</strong>
-                    <span>${escapeHtml(post.type)} · ${escapeHtml(status)} · ${escapeHtml(post.username || "Contributor")} · ${formatDate(post.created_at)}</span>
+                    <span>${escapeHtml(post.type)} · ${escapeHtml(status)} · ${post.audience === "trusted" ? "trusted only · " : ""}${post.is_pinned ? "pinned · " : ""}${escapeHtml(post.username || "Contributor")} · ${formatDate(post.created_at)}</span>
                     <p>${escapeHtml(post.body).slice(0, 140)}${post.body?.length > 140 ? "..." : ""}</p>
                 </div>
                 <div class="admin-post-actions">
                     ${status === "pending" ? `<button type="button" data-approve-post="${post.id}">Approve</button><button type="button" data-reject-post="${post.id}">Reject</button>` : ""}
+                    <button type="button" data-pin-post="${post.id}" data-pin-value="${post.is_pinned ? "false" : "true"}">${post.is_pinned ? "Unpin" : "Pin"}</button>
                     <a class="read-link" href="../forum/?thread=${encodeURIComponent(post.id)}">Open</a>
                     <button type="button" data-delete-post="${post.id}">Delete</button>
                 </div>
@@ -233,6 +215,9 @@ function renderPosts(posts) {
     });
     els.posts.querySelectorAll("[data-delete-post]").forEach((button) => {
         button.addEventListener("click", () => deletePost(button.dataset.deletePost));
+    });
+    els.posts.querySelectorAll("[data-pin-post]").forEach((button) => {
+        button.addEventListener("click", () => updatePostPin(button.dataset.pinPost, button.dataset.pinValue === "true"));
     });
 }
 
@@ -325,19 +310,21 @@ async function loadDashboard() {
         els.metrics.comments.textContent = commentCount;
         els.metrics.reports.textContent = reportCount;
 
-        const [reportsResult, usersResult, pendingPostsResult, postsResult, commentsResult] = await Promise.all([
+        const [reportsResult, messagesResult, usersResult, pendingPostsResult, postsResult, commentsResult] = await Promise.all([
             client.from("forum_reports").select("id,thread_id,comment_id,reason,status,username,created_at").eq("status", "open").order("created_at", { ascending: false }).limit(20),
+            client.from("forum_admin_messages").select("id,user_id,kind,message,status,username,created_at").eq("status", "open").order("created_at", { ascending: false }).limit(30),
             client.from("profiles").select("id,email,username,role,trust_status,settings_completed,notifications_enabled,created_at").order("created_at", { ascending: false }).limit(50),
-            client.from("forum_threads").select("id,type,title,body,username,status,created_at").eq("status", "pending").order("created_at", { ascending: false }).limit(20),
-            client.from("forum_threads").select("id,type,title,body,username,status,created_at").neq("status", "pending").order("created_at", { ascending: false }).limit(10),
+            client.from("forum_threads").select("id,type,title,body,username,status,audience,is_pinned,created_at").eq("status", "pending").order("created_at", { ascending: false }).limit(20),
+            client.from("forum_threads").select("id,type,title,body,username,status,audience,is_pinned,created_at").neq("status", "pending").order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(10),
             client.from("forum_comments_with_scores").select("id,thread_id,body,username,created_at,score").order("created_at", { ascending: false }).limit(10),
         ]);
 
-        for (const result of [reportsResult, usersResult, pendingPostsResult, postsResult, commentsResult]) {
+        for (const result of [reportsResult, messagesResult, usersResult, pendingPostsResult, postsResult, commentsResult]) {
             if (result.error) throw result.error;
         }
 
         renderReports(reportsResult.data || []);
+        renderMessages(messagesResult.data || []);
         renderUsers(usersResult.data || []);
         renderPosts([...(pendingPostsResult.data || []), ...(postsResult.data || [])]);
         renderComments(commentsResult.data || []);
@@ -371,6 +358,55 @@ async function updatePostStatus(id, status) {
         return;
     }
     await loadDashboard();
+}
+
+async function updatePostPin(id, isPinned) {
+    const { error } = await client
+        .from("forum_threads")
+        .update({ is_pinned: isPinned, updated_at: new Date().toISOString() })
+        .eq("id", id);
+    if (error) {
+        setGate(error.message || "Could not pin post.");
+        return;
+    }
+    await loadDashboard();
+}
+
+async function closeMessage(id) {
+    const { error } = await client
+        .from("forum_admin_messages")
+        .update({ status: "closed", updated_at: new Date().toISOString() })
+        .eq("id", id);
+    if (error) {
+        setGate(error.message || "Could not close message.");
+        return;
+    }
+    await loadDashboard();
+}
+
+async function trustFromMessage(userId, messageId) {
+    await updateUserTrust(userId, "trusted");
+    await closeMessage(messageId);
+}
+
+async function exportTrustedEmails() {
+    const { data, error } = await client
+        .from("profiles")
+        .select("email,username,trust_status")
+        .eq("trust_status", "trusted")
+        .order("email", { ascending: true });
+    if (error) {
+        setGate(error.message || "Could not export trusted users.");
+        return;
+    }
+    const rows = [["email", "username", "trust_status"], ...(data || []).map((user) => [user.email || "", user.username || "", user.trust_status || ""])];
+    const csv = rows.map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "trusted-users.csv";
+    link.click();
+    URL.revokeObjectURL(link.href);
 }
 
 async function deletePost(id) {
@@ -421,6 +457,7 @@ async function init() {
     els.email.textContent = state.profile?.email || state.session.user.email || "";
 
     els.refresh.addEventListener("click", loadDashboard);
+    els.exportTrusted.addEventListener("click", exportTrustedEmails);
     els.pageEditor.slug.addEventListener("change", loadEditablePage);
     els.pageEditor.body.addEventListener("input", updatePagePreview);
     els.pageEditor.title.addEventListener("input", updatePagePreview);

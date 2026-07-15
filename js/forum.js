@@ -21,6 +21,7 @@ const els = {
     compose: document.getElementById("forum-compose"),
     composeStatus: document.getElementById("forum-compose-status"),
     status: document.getElementById("forum-status"),
+    userPanel: document.getElementById("forum-user-panel"),
     list: document.getElementById("forum-list"),
     thread: document.getElementById("forum-thread"),
     newPost: document.getElementById("forum-new-post"),
@@ -32,6 +33,8 @@ const els = {
     settingsClose: document.getElementById("forum-settings-close"),
     editId: document.getElementById("forum-edit-id"),
     type: document.getElementById("forum-type"),
+    audienceRow: document.getElementById("forum-audience-row"),
+    audience: document.getElementById("forum-audience"),
     postingAs: document.getElementById("forum-posting-as"),
     title: document.getElementById("forum-title"),
     tags: document.getElementById("forum-tags"),
@@ -99,6 +102,12 @@ function renderPostImage(url, title = "") {
     `;
 }
 
+function statusLabel(status) {
+    if (status === "approved") return "Approved";
+    if (status === "rejected") return "Rejected";
+    return "Pending approval";
+}
+
 function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
@@ -159,6 +168,8 @@ function resetCompose() {
     els.imageUrl.value = "";
     updateImagePreview("");
     els.type.value = state.tab;
+    els.audience.value = "public";
+    els.audienceRow.hidden = !isAdmin();
     els.submit.textContent = "Publish to forum";
     els.cancelEdit.textContent = "Close";
     els.composeStatus.textContent = "";
@@ -295,8 +306,9 @@ async function loadThreads() {
 
     const { data, error } = await client
         .from("forum_threads_with_counts")
-        .select("id,slug,type,title,body,tags,image_url,username,created_by,status,created_at,updated_at,comment_count")
+        .select("id,slug,type,title,body,tags,image_url,username,created_by,status,audience,is_pinned,created_at,updated_at,comment_count")
         .eq("type", state.tab)
+        .order("is_pinned", { ascending: false })
         .order("updated_at", { ascending: false });
 
     if (error) {
@@ -308,6 +320,7 @@ async function loadThreads() {
     state.threads = data || [];
     setStatus("");
     renderThreadList();
+    await renderUserPanel();
     const threadId = new URLSearchParams(window.location.search).get("thread");
     if (threadId && !state.selectedThread) {
         await openThread(threadId);
@@ -325,11 +338,11 @@ function renderThreadList() {
         <article class="post-card forum-card" data-thread-id="${thread.id}">
             <div>
                 <time>${formatDate(thread.created_at)}</time>
-                <h2><button type="button" data-open-thread="${thread.id}">${escapeHtml(thread.title)}</button></h2>
+                <h2><button type="button" data-open-thread="${thread.id}">${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</button></h2>
                 ${renderTags(thread.tags)}
                 ${renderPostImage(thread.image_url, thread.title)}
                 <p>${escapeHtml(thread.body).slice(0, 220)}${thread.body?.length > 220 ? "..." : ""}</p>
-                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor")} · ${thread.comment_count || 0} comments</span>
+                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor")} · ${thread.audience === "trusted" ? "Trusted only · " : ""}${thread.comment_count || 0} comments</span>
             </div>
             <button class="read-link" type="button" data-open-thread="${thread.id}">Open</button>
         </article>
@@ -338,6 +351,46 @@ function renderThreadList() {
     els.list.querySelectorAll("[data-open-thread]").forEach((button) => {
         button.addEventListener("click", () => openThread(button.dataset.openThread));
     });
+}
+
+async function renderUserPanel() {
+    if (!els.userPanel || !state.session) {
+        if (els.userPanel) els.userPanel.hidden = true;
+        return;
+    }
+    const { data: posts, error } = await client
+        .from("forum_threads")
+        .select("id,title,status,type,created_at")
+        .eq("created_by", state.session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(6);
+    if (error) {
+        els.userPanel.hidden = true;
+        return;
+    }
+    const postRows = (posts || []).map((post) => `
+        <article>
+            <strong>${escapeHtml(post.title)}</strong>
+            <span>${escapeHtml(post.type)} · ${statusLabel(post.status)}</span>
+        </article>
+    `).join("");
+    els.userPanel.innerHTML = `
+        <div>
+            <h2>Your forum status</h2>
+            <p>${isTrusted() ? "You are trusted. You can post and comment directly." : "You are untrusted. Your posts go to admin for approval before appearing publicly."}</p>
+        </div>
+        <div class="forum-status-list">${postRows || '<p class="builder-status">No submitted posts yet.</p>'}</div>
+        <form class="forum-admin-message" id="forum-admin-message">
+            <label>
+                <span>${isTrusted() ? "Message admin" : "Apply to be trusted / message admin"}</span>
+                <textarea rows="3" name="message" placeholder="Write a short message to admin..." required></textarea>
+            </label>
+            <button type="submit">${isTrusted() ? "Send message" : "Apply / send"}</button>
+            <p class="builder-status" data-admin-message-status></p>
+        </form>
+    `;
+    els.userPanel.hidden = false;
+    els.userPanel.querySelector("#forum-admin-message").addEventListener("submit", submitAdminMessage);
 }
 
 async function openThread(id) {
@@ -359,11 +412,31 @@ async function openThread(id) {
     await renderSelectedThread();
 }
 
+async function submitAdminMessage(event) {
+    event.preventDefault();
+    const status = event.currentTarget.querySelector("[data-admin-message-status]");
+    const message = event.currentTarget.elements.message.value.trim();
+    if (!message) return;
+    status.textContent = "Sending...";
+    const { error } = await client.from("forum_admin_messages").insert({
+        message,
+        kind: isTrusted() ? "message" : "trust_application",
+        username: displayName(),
+    });
+    if (error) {
+        status.textContent = friendlyError(error);
+        return;
+    }
+    event.currentTarget.reset();
+    status.textContent = "Sent to admin.";
+}
+
 async function fetchComments(threadId) {
     const { data, error } = await client
         .from("forum_comments_with_scores")
         .select("*")
         .eq("thread_id", threadId)
+        .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: true });
     if (error) throw new Error(friendlyError(error));
     return data || [];
@@ -371,6 +444,7 @@ async function fetchComments(threadId) {
 
 function sortTopComments(comments) {
     return [...comments].sort((a, b) => {
+        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
         const scoreDiff = (b.score || 0) - (a.score || 0);
         if (scoreDiff) return scoreDiff;
         return new Date(a.created_at) - new Date(b.created_at);
@@ -398,6 +472,7 @@ async function renderSelectedThread() {
     const comments = await fetchComments(thread.id);
     const actions = [
         canEdit(thread) ? '<button type="button" data-edit-thread>Edit</button>' : "",
+        isAdmin() ? `<button type="button" data-pin-thread>${thread.is_pinned ? "Unpin post" : "Pin post"}</button>` : "",
         canDeleteThread(thread) ? '<button type="button" data-delete-thread>Delete</button>' : "",
     ].join("");
     const reportThreadAction = state.session
@@ -420,7 +495,7 @@ async function renderSelectedThread() {
         <button class="back-link" type="button" data-back-forum>← Back</button>
         <header class="single-head">
             <time>${formatDate(thread.created_at)}</time>
-            <h1>${escapeHtml(thread.title)}</h1>
+            <h1>${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</h1>
             ${renderTags(thread.tags)}
             <p class="forum-meta">By ${renderUsername(thread.username || "Contributor")}</p>
             <div class="admin-post-actions">${actions}${reportThreadAction}</div>
@@ -438,6 +513,7 @@ async function renderSelectedThread() {
 
     els.thread.querySelector("[data-back-forum]").addEventListener("click", loadThreads);
     els.thread.querySelector("[data-edit-thread]")?.addEventListener("click", () => editThread(thread));
+    els.thread.querySelector("[data-pin-thread]")?.addEventListener("click", () => toggleThreadPin(thread));
     els.thread.querySelector("[data-delete-thread]")?.addEventListener("click", () => deleteThread(thread.id));
     els.thread.querySelector("[data-report-thread]")?.addEventListener("click", () => reportContent({ threadId: thread.id }));
     els.thread.querySelector("#comment-form")?.addEventListener("submit", submitComment);
@@ -456,15 +532,22 @@ async function renderSelectedThread() {
     els.thread.querySelectorAll("[data-reply-form]").forEach((form) => {
         form.addEventListener("submit", (event) => submitComment(event, form.dataset.replyForm));
     });
+    els.thread.querySelectorAll("[data-pin-comment]").forEach((button) => {
+        button.addEventListener("click", () => toggleCommentPin(button.dataset.pinComment));
+    });
 }
 
 function renderComment(comment, groups, depth) {
-    const replies = (groups.get(comment.id) || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const replies = (groups.get(comment.id) || []).sort((a, b) => {
+        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
     const deleteAction = canDeleteComment(comment)
         ? `<button type="button" data-delete-comment="${comment.id}">Delete</button>`
         : "";
+    const pinAction = isAdmin() ? `<button type="button" data-pin-comment="${comment.id}">${comment.is_pinned ? "Unpin" : "Pin"}</button>` : "";
     const actions = state.session && isTrusted()
-        ? `<button type="button" data-reply-comment="${comment.id}">Reply</button><button type="button" data-report-comment="${comment.id}">Report</button>${deleteAction}`
+        ? `<button type="button" data-reply-comment="${comment.id}">Reply</button><button type="button" data-report-comment="${comment.id}">Report</button>${pinAction}${deleteAction}`
         : "";
     const replyForm = state.session && isTrusted()
         ? `<form class="reply-form" data-reply-form="${comment.id}" hidden>
@@ -484,7 +567,7 @@ function renderComment(comment, groups, depth) {
                     ${isTrusted() ? `<button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>` : ""}
                 </div>
                 <div>
-                    <div class="forum-meta">${renderUsername(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
+                    <div class="forum-meta">${comment.is_pinned ? "Pinned · " : ""}${renderUsername(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
                     <p>${escapeHtml(comment.body)}</p>
                     <div class="admin-post-actions">${actions}</div>
                     ${replyForm}
@@ -531,6 +614,32 @@ async function submitComment(event, parentId = null) {
     await renderSelectedThread();
 }
 
+async function toggleThreadPin(thread) {
+    const { error } = await client
+        .from("forum_threads")
+        .update({ is_pinned: !thread.is_pinned, updated_at: new Date().toISOString() })
+        .eq("id", thread.id);
+    if (error) {
+        setStatus(friendlyError(error));
+        return;
+    }
+    await openThread(thread.id);
+}
+
+async function toggleCommentPin(commentId) {
+    const comments = await fetchComments(state.selectedThread.id);
+    const comment = comments.find((item) => item.id === commentId);
+    const { error } = await client
+        .from("forum_comments")
+        .update({ is_pinned: !comment?.is_pinned, updated_at: new Date().toISOString() })
+        .eq("id", commentId);
+    if (error) {
+        setStatus(friendlyError(error));
+        return;
+    }
+    await renderSelectedThread();
+}
+
 async function voteComment(commentId, value) {
     if (!state.session) {
         window.location.href = "../admin/";
@@ -559,6 +668,8 @@ async function voteComment(commentId, value) {
 function editThread(thread) {
     els.editId.value = thread.id;
     els.type.value = thread.type;
+    els.audience.value = thread.audience || "public";
+    els.audienceRow.hidden = !isAdmin();
     els.title.value = thread.title || "";
     els.tags.value = normalizeTags(thread.tags).join(", ");
     els.body.value = thread.body || "";
@@ -720,6 +831,7 @@ async function submitThread(event) {
         tags: normalizeTags(els.tags.value),
         image_url: imageUrl || null,
         username: displayName(),
+        audience: isAdmin() ? els.audience.value : "public",
         status: isTrusted() ? "approved" : "pending",
         updated_at: new Date().toISOString(),
     };

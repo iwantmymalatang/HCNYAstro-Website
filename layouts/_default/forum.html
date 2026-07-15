@@ -22,6 +22,8 @@
         </div>
     </div>
 
+    <section class="forum-user-panel" id="forum-user-panel" hidden></section>
+
     <form class="forum-settings-panel" id="forum-settings-panel" hidden>
         <div class="image-helper-head">
             <span>My settings</span>
@@ -52,6 +54,13 @@
             <select id="forum-type">
                 <option value="guide">Guides &amp; Docs</option>
                 <option value="question">Questions</option>
+            </select>
+        </label>
+        <label id="forum-audience-row" hidden>
+            <span>Audience</span>
+            <select id="forum-audience">
+                <option value="public">Everyone</option>
+                <option value="trusted">Trusted users only</option>
             </select>
         </label>
         <label>

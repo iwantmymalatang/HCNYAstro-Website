@@ -231,6 +231,13 @@ async function renderAccount() {
 
 function friendlyError(error) {
     const message = error?.message || String(error || "");
+    const lower = message.toLowerCase();
+    if (lower.includes("duplicate") || lower.includes("profiles_username_key_unique")) {
+        return "That username is already taken. Choose a different one.";
+    }
+    if (lower.includes("username cannot include admin")) {
+        return "Only the HCNY Astro admin account can use admin in a username.";
+    }
     if (message.includes("parent_id")) {
         return "Reply threads are not set up in Supabase yet. Run supabase-add-comment-replies.sql in Supabase SQL Editor, then refresh.";
     }
@@ -734,6 +741,10 @@ async function submitSettings(event) {
     const username = els.settingsUsername.value.trim();
     if (!username) {
         els.settingsStatus.textContent = "Username is required.";
+        return;
+    }
+    if (!isAdmin() && username.toLowerCase().includes("admin")) {
+        els.settingsStatus.textContent = "Only the HCNY Astro admin account can use admin in a username.";
         return;
     }
     els.settingsStatus.textContent = "Saving...";

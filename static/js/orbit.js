@@ -39,8 +39,8 @@
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "#e9e7ff";
-        ctx.font = "12px Inter, system-ui, sans-serif";
+        ctx.fillStyle = "#d7d2c8";
+        ctx.font = '12px "Avenir Next", sans-serif';
         ctx.fillText(label, x + 12, y - 10);
     }
 
@@ -55,11 +55,11 @@
         for (let i = 0; i < 64; i += 1) {
             const x = (i * 73 + 11) % width;
             const y = (i * 41 + 29) % height;
-            ctx.fillStyle = `rgba(215, 216, 255, ${0.18 + 0.18 * Math.sin(phase + i)})`;
+            ctx.fillStyle = `rgba(224, 216, 198, ${0.12 + 0.14 * Math.sin(phase + i)})`;
             ctx.fillRect(x, y, 1, 1);
         }
 
-        ctx.strokeStyle = "rgba(143, 140, 255, 0.42)";
+        ctx.strokeStyle = "rgba(212, 168, 95, 0.34)";
         ctx.lineWidth = 1.2;
         ctx.beginPath();
         for (let i = 0; i <= 360; i += 1) {
@@ -73,8 +73,8 @@
 
         const bodies = [
             { offset: 0, color: "#ffffff", label: "m1" },
-            { offset: (Math.PI * 2) / 3, color: "#a58bff", label: "m2" },
-            { offset: (Math.PI * 4) / 3, color: "#6f7dff", label: "m3" },
+            { offset: (Math.PI * 2) / 3, color: "#d4a85f", label: "m2" },
+            { offset: (Math.PI * 4) / 3, color: "#9ca9a2", label: "m3" },
         ];
 
         bodies.forEach((body) => {

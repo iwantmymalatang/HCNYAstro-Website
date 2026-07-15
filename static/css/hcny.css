@@ -1532,8 +1532,46 @@ h1 {
 }
 
 .forum-compose:not(.is-open),
-.forum-settings-panel:not(.is-open) {
+.forum-settings-panel:not(.is-open),
+.forum-welcome-popup:not(.is-open) {
     display: none !important;
+}
+
+.forum-welcome-popup {
+    position: fixed;
+    z-index: 65;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    gap: 12px;
+    width: min(380px, calc(100% - 32px));
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 20px;
+    background: #06070f;
+    box-shadow: 0 26px 90px rgba(0, 0, 0, 0.82);
+}
+
+.forum-welcome-popup h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.3rem;
+}
+
+.forum-welcome-popup p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.forum-welcome-popup button {
+    min-height: 42px;
+    border: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #05060b;
+    font-weight: 900;
+    cursor: pointer;
 }
 
 .forum-settings-panel {

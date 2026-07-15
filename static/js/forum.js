@@ -31,6 +31,8 @@ const els = {
     settingsNotifications: document.getElementById("forum-settings-notifications"),
     settingsStatus: document.getElementById("forum-settings-status"),
     settingsClose: document.getElementById("forum-settings-close"),
+    welcomePopup: document.getElementById("forum-welcome-popup"),
+    welcomeContinue: document.getElementById("forum-welcome-continue"),
     editId: document.getElementById("forum-edit-id"),
     type: document.getElementById("forum-type"),
     audienceRow: document.getElementById("forum-audience-row"),
@@ -1048,7 +1050,25 @@ async function submitSettings(event) {
 function closePostPanels() {
     els.settingsPanel.hidden = true;
     els.settingsPanel.classList.remove("is-open");
+    els.welcomePopup.hidden = true;
+    els.welcomePopup.classList.remove("is-open");
     resetCompose();
+}
+
+function openWelcomePopup() {
+    els.compose.hidden = true;
+    els.compose.classList.remove("is-open");
+    els.settingsPanel.hidden = true;
+    els.settingsPanel.classList.remove("is-open");
+    els.thread.hidden = true;
+    els.welcomePopup.hidden = false;
+    els.welcomePopup.classList.add("is-open");
+}
+
+function continueFromWelcome() {
+    els.welcomePopup.hidden = true;
+    els.welcomePopup.classList.remove("is-open");
+    openSettings(true);
 }
 
 async function init() {
@@ -1064,10 +1084,6 @@ async function init() {
     await refreshProfile();
     await renderAccount();
     resetCompose();
-    if (state.session && state.profile && !state.profile.settings_completed) {
-        openSettings(true);
-    }
-
     document.querySelectorAll("[data-forum-tab]").forEach((button) => {
         button.addEventListener("click", async () => {
             state.tab = button.dataset.forumTab;
@@ -1093,8 +1109,12 @@ async function init() {
     els.settingsPanel.addEventListener("submit", submitSettings);
     els.cancelEdit.addEventListener("click", closePostPanels);
     els.settingsClose.addEventListener("click", closePostPanels);
+    els.welcomeContinue.addEventListener("click", continueFromWelcome);
 
     await loadThreads();
+    if (state.session && state.profile && !state.profile.settings_completed) {
+        openWelcomePopup();
+    }
 }
 
 await init();

@@ -5,7 +5,7 @@
     <header class="single-head">
         <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
         <h1>{{ .Title }}</h1>
-        {{ if not .Date.IsZero }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 Jan 2006" }}</time>{{ end }}
+        {{ if and (not .Date.IsZero) (not (or (eq $dynamicSlug "about") (eq $dynamicSlug "repository"))) }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 Jan 2006" }}</time>{{ end }}
     </header>
     <div class="single-content">
         {{ if or (eq $dynamicSlug "about") (eq $dynamicSlug "repository") }}

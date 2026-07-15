@@ -165,14 +165,9 @@ function displayName() {
     return state.profile?.username || state.session?.user?.email?.split("@")[0] || "Contributor";
 }
 
-function isAdminName(name) {
-    const normalized = String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-    return normalized === "hcnyastro" || normalized.includes("hcnyastroadmin") || normalized.includes("admin");
-}
-
-function renderUsername(name) {
+function renderUsername(name, isAdminAuthor = false) {
     const safeName = escapeHtml(name || "Contributor");
-    return isAdminName(name) ? `<span class="admin-glow-name">${safeName}</span>` : safeName;
+    return isAdminAuthor ? `<span class="admin-glow-name">${safeName}</span>` : safeName;
 }
 
 function resetCompose() {
@@ -272,7 +267,7 @@ async function renderAccount() {
 
     els.account.innerHTML = `
         <button type="button" id="forum-new-post">New post</button>
-        <span>${renderUsername(displayName())}</span>
+        <span>${renderUsername(displayName(), isAdmin())}</span>
         ${isAdmin() ? '<strong>Admin</strong>' : `<strong>${isTrusted() ? "Trusted" : "Untrusted"}</strong>`}
         ${isAdmin() ? '<a class="read-link" href="../admin-dashboard/">Dashboard</a>' : ""}
         ${isAdmin() ? '<button type="button" id="forum-reports">Reports</button>' : ""}
@@ -319,7 +314,7 @@ async function loadThreads() {
 
     const { data, error } = await client
         .from("forum_threads_with_counts")
-        .select("id,slug,type,title,body,tags,image_url,username,created_by,status,audience,is_pinned,created_at,updated_at,comment_count")
+        .select("*")
         .eq("type", state.tab)
         .order("is_pinned", { ascending: false })
         .order("updated_at", { ascending: false });
@@ -354,7 +349,7 @@ function renderThreadList() {
                 <h2><button type="button" data-open-thread="${thread.id}">${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</button></h2>
                 ${renderTags(thread.tags)}
                 <p>${escapeHtml(plainPreview(thread.body))}</p>
-                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor")} · ${thread.audience === "trusted" ? "Trusted only · " : ""}${thread.comment_count || 0} comments</span>
+                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor", thread.is_admin_author)} · ${thread.audience === "trusted" ? "Trusted only · " : ""}${thread.comment_count || 0} comments</span>
             </div>
             <button class="read-link" type="button" data-open-thread="${thread.id}">Open</button>
         </article>
@@ -509,7 +504,7 @@ async function renderSelectedThread() {
             <time>${formatDate(thread.created_at)}</time>
             <h1>${thread.is_pinned ? "Pinned: " : ""}${escapeHtml(thread.title)}</h1>
             ${renderTags(thread.tags)}
-            <p class="forum-meta">By ${renderUsername(thread.username || "Contributor")}</p>
+            <p class="forum-meta">By ${renderUsername(thread.username || "Contributor", thread.is_admin_author)}</p>
             <div class="admin-post-actions">${actions}${reportThreadAction}</div>
         </header>
         <div class="single-content">${renderBody(thread.body)}</div>
@@ -579,7 +574,7 @@ function renderComment(comment, groups, depth) {
                     ${isTrusted() ? `<button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>` : ""}
                 </div>
                 <div>
-                    <div class="forum-meta">${comment.is_pinned ? "Pinned · " : ""}${renderUsername(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
+                    <div class="forum-meta">${comment.is_pinned ? "Pinned · " : ""}${renderUsername(comment.username || "Contributor", comment.is_admin_author)} · ${formatDate(comment.created_at)}</div>
                     <p>${escapeHtml(comment.body)}</p>
                     <div class="admin-post-actions">${actions}</div>
                     ${replyForm}
@@ -759,7 +754,7 @@ async function openReports() {
 
     const { data, error } = await client
         .from("forum_reports")
-        .select("id,thread_id,comment_id,reason,status,username,created_at")
+        .select("*")
         .eq("status", "open")
         .order("created_at", { ascending: false });
     if (error) {
@@ -787,7 +782,7 @@ function renderReport(report) {
         <article class="comment report-card">
             <div></div>
             <div>
-                <div class="forum-meta">${target} report · ${renderUsername(report.username || "Contributor")} · ${formatDate(report.created_at)}</div>
+                <div class="forum-meta">${target} report · ${renderUsername(report.username || "Contributor", report.is_admin_author)} · ${formatDate(report.created_at)}</div>
                 <p>${escapeHtml(report.reason)}</p>
                 <div class="admin-post-actions">
                     ${report.thread_id ? `<button type="button" data-open-report-thread="${report.thread_id}">Open post</button>` : ""}

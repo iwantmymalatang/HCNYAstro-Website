@@ -713,6 +713,115 @@ h1 {
     color: var(--muted);
 }
 
+.three-body-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.three-body-loader {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at center, rgba(255, 255, 255, 0.12), transparent 28%),
+        radial-gradient(circle at center, rgba(126, 98, 255, 0.16), transparent 62%);
+    animation: three-body-frame 5s linear infinite;
+}
+
+.three-body-loader::before,
+.three-body-loader::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border: 1px solid rgba(190, 184, 255, 0.18);
+    border-radius: 50%;
+}
+
+.three-body-loader::after {
+    inset: 16px;
+    border-color: rgba(83, 141, 255, 0.18);
+}
+
+.three-body-loader span {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 14px currentColor;
+    transform-origin: 29px 29px;
+}
+
+.three-body-loader span:nth-child(1) {
+    color: #ffffff;
+    animation: three-body-one 2.8s ease-in-out infinite;
+}
+
+.three-body-loader span:nth-child(2) {
+    color: #8c7dff;
+    animation: three-body-two 3.4s ease-in-out infinite;
+}
+
+.three-body-loader span:nth-child(3) {
+    color: #56a3ff;
+    animation: three-body-three 4s ease-in-out infinite;
+}
+
+@keyframes three-body-frame {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes three-body-one {
+    0%, 100% {
+        transform: rotate(0deg) translateX(22px) scale(1);
+    }
+    45% {
+        transform: rotate(190deg) translateX(14px) scale(1.18);
+    }
+    72% {
+        transform: rotate(285deg) translateX(25px) scale(0.88);
+    }
+}
+
+@keyframes three-body-two {
+    0%, 100% {
+        transform: rotate(120deg) translateX(20px) scale(0.95);
+    }
+    38% {
+        transform: rotate(310deg) translateX(25px) scale(1.08);
+    }
+    68% {
+        transform: rotate(420deg) translateX(13px) scale(1.22);
+    }
+}
+
+@keyframes three-body-three {
+    0%, 100% {
+        transform: rotate(240deg) translateX(16px) scale(1.1);
+    }
+    42% {
+        transform: rotate(70deg) translateX(24px) scale(0.9);
+    }
+    80% {
+        transform: rotate(170deg) translateX(18px) scale(1.18);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .three-body-loader,
+    .three-body-loader span {
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
+    }
+}
+
 .image-helper {
     display: grid;
     gap: 14px;

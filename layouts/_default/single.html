@@ -9,7 +9,14 @@
     </header>
     <div class="single-content">
         {{ if or (eq $dynamicSlug "about") (eq $dynamicSlug "repository") }}
-            <p>Loading latest content...</p>
+            <div class="three-body-loading" role="status" aria-live="polite">
+                <span class="three-body-loader" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+                <span>Loading latest content...</span>
+            </div>
         {{ else }}
             {{ .Content }}
         {{ end }}

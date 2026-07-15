@@ -6,6 +6,19 @@ const supabaseUrl = article?.dataset.supabaseUrl?.replace(/\/$/, "");
 const supabaseKey = article?.dataset.supabaseKey;
 let lastLoaded = "";
 
+function loadingMarkup(message) {
+    return `
+        <div class="three-body-loading" role="status" aria-live="polite">
+            <span class="three-body-loader" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+            <span>${message}</span>
+        </div>
+    `;
+}
+
 function setMessage(message) {
     const content = article.querySelector(".single-content");
     if (content) content.innerHTML = `<p>${message}</p>`;
@@ -15,6 +28,7 @@ async function loadDynamicPage({ force = false } = {}) {
     if (!article || !slug || !supabaseUrl || !supabaseKey) return;
     const content = article.querySelector(".single-content");
     if (!content) return;
+    if (force) content.innerHTML = loadingMarkup("Loading latest content...");
 
     const url = `${supabaseUrl}/rest/v1/content_pages?slug=eq.${encodeURIComponent(slug)}&select=title,body,updated_at`;
     let response;

@@ -187,7 +187,16 @@ function resetCompose() {
 }
 
 function setStatus(message) {
-    els.status.textContent = message || "";
+    if (message === "Loading forum...") {
+        els.status.innerHTML = `
+            <span class="three-body-loading">
+                <span class="three-body-loader" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span>Loading forum...</span>
+            </span>
+        `;
+    } else {
+        els.status.textContent = message || "";
+    }
     els.status.hidden = !message;
 }
 

@@ -75,12 +75,17 @@ async function loadProfile() {
         .eq("id", state.session.user.id)
         .single();
     if (error) {
-        state.profile = {
-            id: state.session.user.id,
-            email: state.session.user.email,
-            username: state.session.user.email?.split("@")[0] || "Admin",
-            role: "contributor",
-        };
+        const repaired = await client.rpc("ensure_profile");
+        if (repaired.error) {
+            state.profile = {
+                id: state.session.user.id,
+                email: state.session.user.email,
+                username: state.session.user.email?.split("@")[0] || "Admin",
+                role: "contributor",
+            };
+            return;
+        }
+        state.profile = repaired.data;
         return;
     }
     state.profile = data;

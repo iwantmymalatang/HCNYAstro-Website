@@ -154,13 +154,18 @@ async function refreshProfile() {
         .eq("id", state.session.user.id)
         .single();
     if (error) {
-        state.profile = {
-            id: state.session.user.id,
-            email: state.session.user.email,
-            username: state.session.user.email?.split("@")[0] || "Contributor",
-            role: "contributor",
-            notifications_enabled: true,
-        };
+        const repaired = await client.rpc("ensure_profile");
+        if (repaired.error) {
+            state.profile = {
+                id: state.session.user.id,
+                email: state.session.user.email,
+                username: state.session.user.email?.split("@")[0] || "Contributor",
+                role: "contributor",
+                notifications_enabled: true,
+            };
+            return;
+        }
+        state.profile = repaired.data;
         return;
     }
     state.profile = data;

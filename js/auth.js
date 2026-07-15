@@ -36,6 +36,13 @@ function withTimeout(promise, milliseconds, message) {
     return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
 }
 
+async function ensureProfile() {
+    const { error } = await client.rpc("ensure_profile");
+    if (error) {
+        status.textContent = "Signed in, but profile setup needs the latest Supabase SQL.";
+    }
+}
+
 async function init() {
     if (!mount || !form) return;
     if (!client) {
@@ -45,6 +52,7 @@ async function init() {
 
     const { data } = await client.auth.getSession();
     if (data.session) {
+        await ensureProfile();
         window.location.href = destinationForEmail(data.session.user?.email);
         return;
     }

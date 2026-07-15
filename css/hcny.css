@@ -1369,7 +1369,7 @@ h1 {
 .forum-status-list {
     display: grid;
     gap: 8px;
-    max-height: min(360px, 42vh);
+    max-height: min(245px, 32vh);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 4px;

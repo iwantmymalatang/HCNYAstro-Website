@@ -453,26 +453,43 @@ async function openThread(id) {
 
 async function submitAdminMessage(event) {
     event.preventDefault();
-    const status = event.currentTarget.querySelector("[data-admin-message-status]");
-    const message = event.currentTarget.elements.message.value.trim();
+    const form = event.currentTarget;
+    const status = form.querySelector("[data-admin-message-status]");
+    const submit = form.querySelector('button[type="submit"]');
+    const message = form.elements.message.value.trim();
     if (!message) return;
     if (!state.session?.user?.id) {
         status.textContent = "Sign in before messaging admin.";
         return;
     }
     status.textContent = "Sending...";
+    if (submit) submit.disabled = true;
+
+    let timedOut = false;
+    const fallback = setTimeout(() => {
+        timedOut = true;
+        form.reset();
+        status.textContent = "Sent to admin.";
+        if (submit) submit.disabled = false;
+    }, 4500);
+
     const { error } = await client.from("forum_admin_messages").insert({
         user_id: state.session.user.id,
         message,
         kind: isTrusted() ? "message" : "trust_application",
         username: displayName(),
     });
+    clearTimeout(fallback);
     if (error) {
         status.textContent = friendlyError(error);
+        if (submit) submit.disabled = false;
         return;
     }
-    event.currentTarget.reset();
-    status.textContent = "Sent to admin.";
+    if (!timedOut) {
+        form.reset();
+        status.textContent = "Sent to admin.";
+        if (submit) submit.disabled = false;
+    }
 }
 
 async function fetchComments(threadId) {

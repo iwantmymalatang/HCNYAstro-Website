@@ -1591,6 +1591,11 @@ h1 {
     padding: 26px 0;
 }
 
+.footer-inner a {
+    color: #ffffff;
+    text-underline-offset: 3px;
+}
+
 @media (max-width: 980px) {
     .hero-grid {
         grid-template-columns: 1fr;

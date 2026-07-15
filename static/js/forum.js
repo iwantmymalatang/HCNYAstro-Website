@@ -133,6 +133,12 @@ function statusReminder(status) {
     return "";
 }
 
+function validationNote(post) {
+    return post.status === "rejected" && post.validation_note
+        ? `Admin note: ${post.validation_note}`
+        : "";
+}
+
 function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
@@ -394,12 +400,22 @@ async function renderUserPanel() {
         if (els.userPanel) els.userPanel.hidden = true;
         return;
     }
-    const { data: posts, error } = await client
+    let { data: posts, error } = await client
         .from("forum_threads")
-        .select("id,title,status,type,created_at,updated_at")
+        .select("id,title,status,type,validation_note,created_at,updated_at")
         .eq("created_by", state.session.user.id)
         .order("created_at", { ascending: false })
         .limit(20);
+    if (error && (error.message || "").includes("validation_note")) {
+        const fallback = await client
+            .from("forum_threads")
+            .select("id,title,status,type,created_at,updated_at")
+            .eq("created_by", state.session.user.id)
+            .order("created_at", { ascending: false })
+            .limit(20);
+        posts = fallback.data;
+        error = fallback.error;
+    }
     if (error) {
         els.userPanel.hidden = true;
         return;
@@ -409,6 +425,7 @@ async function renderUserPanel() {
             <strong>${escapeHtml(post.title)}</strong>
             <span>${escapeHtml(post.type)} · ${statusLabel(post.status)}</span>
             ${statusReminder(post.status) ? `<p>${escapeHtml(statusReminder(post.status))}</p>` : ""}
+            ${validationNote(post) ? `<p>${escapeHtml(validationNote(post))}</p>` : ""}
             <span>Submitted ${formatDate(post.created_at)}${post.updated_at && post.updated_at !== post.created_at ? ` · Last edited ${formatDate(post.updated_at)}` : ""}</span>
             <div class="forum-status-actions">
                 <button type="button" data-open-user-post="${post.id}">Open</button>

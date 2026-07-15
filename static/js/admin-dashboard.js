@@ -192,12 +192,14 @@ function renderPosts(posts) {
     els.posts.innerHTML = posts.length ? posts.map((post) => {
         const status = post.status || "approved";
         const statusLabel = status === "approved" ? "validated" : status === "rejected" ? "needs changes" : "waiting for validation";
+        const note = status === "rejected" && post.validation_note ? `Change note: ${post.validation_note}` : "";
         return `
             <article class="admin-row">
                 <div>
                     <strong>${escapeHtml(post.title)}</strong>
                     <span>${escapeHtml(post.type)} · ${escapeHtml(statusLabel)} · ${post.audience === "trusted" ? "validated contributors only · " : ""}${post.is_pinned ? "pinned · " : ""}${escapeHtml(post.username || "Contributor")} · ${formatDate(post.created_at)}</span>
                     <p>${escapeHtml(post.body).slice(0, 140)}${post.body?.length > 140 ? "..." : ""}</p>
+                    ${note ? `<p>${escapeHtml(note)}</p>` : ""}
                 </div>
                 <div class="admin-post-actions">
                     ${status === "pending" ? `<button type="button" data-approve-post="${post.id}">Validate</button><button type="button" data-reject-post="${post.id}">Needs changes</button>` : ""}
@@ -301,6 +303,22 @@ async function saveEditablePage() {
     setPageEditorStatus("Saved. Refresh the public page to see it.");
 }
 
+async function loadAdminPostLists() {
+    const fields = "id,type,title,body,username,status,audience,is_pinned,validation_note,created_at";
+    let [pending, recent] = await Promise.all([
+        client.from("forum_threads").select(fields).eq("status", "pending").order("created_at", { ascending: false }).limit(20),
+        client.from("forum_threads").select(fields).neq("status", "pending").order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(10),
+    ]);
+    if ((pending.error?.message || recent.error?.message || "").includes("validation_note")) {
+        const fallbackFields = "id,type,title,body,username,status,audience,is_pinned,created_at";
+        [pending, recent] = await Promise.all([
+            client.from("forum_threads").select(fallbackFields).eq("status", "pending").order("created_at", { ascending: false }).limit(20),
+            client.from("forum_threads").select(fallbackFields).neq("status", "pending").order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(10),
+        ]);
+    }
+    return [pending, recent];
+}
+
 async function loadDashboard() {
     els.body.classList.add("is-loading");
     try {
@@ -316,14 +334,14 @@ async function loadDashboard() {
         els.metrics.comments.textContent = commentCount;
         els.metrics.reports.textContent = reportCount;
 
-        const [reportsResult, messagesResult, usersResult, pendingPostsResult, postsResult, commentsResult] = await Promise.all([
+        const [reportsResult, messagesResult, usersResult, postLists, commentsResult] = await Promise.all([
             client.from("forum_reports").select("id,thread_id,comment_id,reason,status,username,created_at").eq("status", "open").order("created_at", { ascending: false }).limit(20),
             client.from("forum_admin_messages").select("id,user_id,kind,message,status,username,created_at").eq("status", "open").order("created_at", { ascending: false }).limit(30),
             client.from("profiles").select("id,email,username,role,trust_status,settings_completed,notifications_enabled,created_at").order("created_at", { ascending: false }).limit(50),
-            client.from("forum_threads").select("id,type,title,body,username,status,audience,is_pinned,created_at").eq("status", "pending").order("created_at", { ascending: false }).limit(20),
-            client.from("forum_threads").select("id,type,title,body,username,status,audience,is_pinned,created_at").neq("status", "pending").order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(10),
+            loadAdminPostLists(),
             client.from("forum_comments_with_scores").select("id,thread_id,body,username,created_at,score").order("created_at", { ascending: false }).limit(10),
         ]);
+        const [pendingPostsResult, postsResult] = postLists;
 
         for (const result of [reportsResult, messagesResult, usersResult, pendingPostsResult, postsResult, commentsResult]) {
             if (result.error) throw result.error;
@@ -355,12 +373,23 @@ async function updateUserTrust(id, trustStatus) {
 }
 
 async function updatePostStatus(id, status) {
+    const payload = { status, updated_at: new Date().toISOString() };
+    if (status === "rejected") {
+        const note = window.prompt("What should the contributor change before validation?");
+        if (!note?.trim()) return;
+        payload.validation_note = note.trim().slice(0, 800);
+    } else {
+        payload.validation_note = null;
+    }
     const { error } = await client
         .from("forum_threads")
-        .update({ status, updated_at: new Date().toISOString() })
+        .update(payload)
         .eq("id", id);
     if (error) {
-        setGate(error.message || "Could not update post.");
+        const message = (error.message || "").includes("validation_note")
+            ? "Post change notes are not set up yet. Run supabase-post-change-notes.sql in Supabase SQL Editor."
+            : error.message || "Could not update post.";
+        setGate(message);
         return;
     }
     await loadDashboard();

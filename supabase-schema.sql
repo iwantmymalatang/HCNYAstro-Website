@@ -108,6 +108,7 @@ create table if not exists public.forum_threads (
 );
 
 alter table public.forum_threads add column if not exists image_url text;
+alter table public.forum_threads add column if not exists validation_note text;
 
 create table if not exists public.forum_comments (
   id uuid primary key default gen_random_uuid(),

@@ -3,7 +3,7 @@
     <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
     <h1>{{ .Title }}</h1>
     <div class="page-summary">
-        <p>Sign in or sign up to contribute to the forum. Use a unique password; if email confirmation is enabled, check your inbox after signing up.</p>
+        <p>Enter your email and use the magic link or one-time code from your inbox to continue.</p>
     </div>
 </section>
 
@@ -14,11 +14,8 @@
     data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"
     data-editor-url="{{ "forum/" | relURL }}"
     data-admin-url="{{ "admin-dashboard/" | relURL }}"
+    data-login-url="{{ "admin/" | absURL }}"
 >
-    <div class="auth-tabs" role="tablist" aria-label="Login options">
-        <button type="button" class="is-active" data-auth-mode="signin">Sign in</button>
-        <button type="button" data-auth-mode="signup">Sign up</button>
-    </div>
     <div class="role-guide">
         <div>
             <strong>Contributor</strong>
@@ -31,27 +28,15 @@
     </div>
     <form class="post-form auth-panel" id="dynamic-login-form">
         <div class="auth-mode-copy" id="auth-mode-copy">
-            <strong>Sign in</strong>
-            <p>Use the account you signed up with.</p>
+            <strong>Email login</strong>
+            <p>We will send a secure sign-in link to your inbox. New contributors are created automatically.</p>
         </div>
-        <input id="auth-mode" type="hidden" value="signin">
         <label>
             <span>Email</span>
             <input id="login-email" type="email" autocomplete="email" placeholder="email@example.com" required>
         </label>
-        <label>
-            <span>Password</span>
-            <div class="password-field">
-                <input id="login-password" type="text" autocomplete="current-password" placeholder="Password" required>
-                <button type="button" id="toggle-password">Hide</button>
-            </div>
-        </label>
-        <label id="confirm-password-row" hidden>
-            <span>Confirm password</span>
-            <input id="confirm-password" type="text" autocomplete="new-password" placeholder="Type password again">
-        </label>
         <div class="builder-actions">
-            <button type="submit" id="login-submit-button">Sign in</button>
+            <button type="submit" id="login-submit-button">Send magic link</button>
         </div>
         <p class="builder-status" id="login-status"></p>
     </form>

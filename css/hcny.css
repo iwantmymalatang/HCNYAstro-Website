@@ -1006,6 +1006,29 @@ h1 {
     gap: 14px;
 }
 
+.admin-posts-panel {
+    grid-column: 1 / -1;
+}
+
+.admin-posts-panel .admin-row {
+    align-items: flex-start;
+}
+
+.admin-posts-panel .admin-row > div:first-child {
+    min-width: min(520px, 100%);
+}
+
+.admin-posts-panel .admin-post-actions {
+    justify-content: flex-end;
+    min-width: 320px;
+}
+
+.admin-posts-panel .admin-post-actions button,
+.admin-posts-panel .admin-post-actions .read-link {
+    min-width: 74px;
+    justify-content: center;
+}
+
 .page-editor-panel {
     min-height: auto;
 }
@@ -1716,6 +1739,12 @@ h1 {
     .footer-inner {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .admin-posts-panel .admin-post-actions {
+        justify-content: flex-start;
+        min-width: 0;
+        width: 100%;
     }
 
     .shell {

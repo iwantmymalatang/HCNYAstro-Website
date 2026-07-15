@@ -123,6 +123,16 @@ function statusLabel(status) {
     return "Waiting for validation";
 }
 
+function statusReminder(status) {
+    if (status === "rejected") {
+        return "Please make the requested changes, then save the post again to send it back for validation.";
+    }
+    if (status === "pending") {
+        return "Your post is saved and waiting for admin validation.";
+    }
+    return "";
+}
+
 function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
@@ -398,6 +408,7 @@ async function renderUserPanel() {
         <article>
             <strong>${escapeHtml(post.title)}</strong>
             <span>${escapeHtml(post.type)} · ${statusLabel(post.status)}</span>
+            ${statusReminder(post.status) ? `<p>${escapeHtml(statusReminder(post.status))}</p>` : ""}
             <span>Submitted ${formatDate(post.created_at)}${post.updated_at && post.updated_at !== post.created_at ? ` · Last edited ${formatDate(post.updated_at)}` : ""}</span>
             <div class="forum-status-actions">
                 <button type="button" data-open-user-post="${post.id}">Open</button>

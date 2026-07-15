@@ -1390,6 +1390,12 @@ h1 {
     font-weight: 800;
 }
 
+.forum-status-list p {
+    margin: 0;
+    color: #d9ddff;
+    font-size: 0.88rem;
+}
+
 .forum-status-actions {
     display: flex;
     flex-wrap: wrap;

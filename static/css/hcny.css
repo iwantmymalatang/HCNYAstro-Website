@@ -3282,3 +3282,12 @@ body {
     }
 
 }
+[data-dynamic-page="repository"] .single-content h2 {
+    padding-top: 0;
+    border-top: 0;
+}
+
+[data-dynamic-page="repository"] .single-content h3 + p {
+    padding-left: 0;
+    border-left: 0;
+}

@@ -1369,6 +1369,19 @@ h1 {
 .forum-status-list {
     display: grid;
     gap: 8px;
+    max-height: min(360px, 42vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+}
+
+.forum-status-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.forum-status-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .forum-status-list article {

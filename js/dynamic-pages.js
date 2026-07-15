@@ -17,19 +17,20 @@ async function loadDynamicPage({ force = false } = {}) {
     if (!content) return;
 
     const url = `${supabaseUrl}/rest/v1/content_pages?slug=eq.${encodeURIComponent(slug)}&select=title,body,updated_at&_=${Date.now()}`;
-    const response = await fetch(url, {
-        method: "GET",
-        cache: "no-store",
-        headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-        },
-    });
+    let response;
+    try {
+        response = await fetch(url, {
+            method: "GET",
+            cache: "reload",
+            headers: { apikey: supabaseKey },
+        });
+    } catch (error) {
+        setMessage("Dynamic content could not load. Refresh the page in a moment.");
+        return;
+    }
 
     if (!response.ok) {
-        setMessage("Dynamic content is not available. Check the Supabase content_pages table.");
+        setMessage(`Dynamic content could not load. Supabase returned ${response.status}.`);
         return;
     }
 

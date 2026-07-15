@@ -17,7 +17,17 @@ set trust_status = case when lower(coalesce(email, '')) = 'hcnyastro@gmail.com' 
     role = case when lower(coalesce(email, '')) = 'hcnyastro@gmail.com' then 'admin' else role end;
 
 alter table public.forum_threads
-add column if not exists status text not null default 'pending';
+add column if not exists status text;
+
+update public.forum_threads
+set status = 'approved'
+where status is null;
+
+alter table public.forum_threads
+alter column status set default 'pending';
+
+alter table public.forum_threads
+alter column status set not null;
 
 alter table public.forum_threads drop constraint if exists forum_threads_status_check;
 alter table public.forum_threads
@@ -25,7 +35,7 @@ add constraint forum_threads_status_check check (status in ('pending', 'approved
 
 update public.forum_threads
 set status = 'approved'
-where status is null or status not in ('pending', 'approved', 'rejected');
+where status not in ('pending', 'approved', 'rejected');
 
 create or replace function public.is_trusted()
 returns boolean

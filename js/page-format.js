@@ -10,6 +10,7 @@ export function escapeHtml(value) {
 function inlineFormat(value) {
     return escapeHtml(value)
         .replace(/\[([^\]]+)\]\[(https?:\/\/[^\]\s]+|\/[^\]\s]+)\]/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/\[([^\[\]]+)\[(https?:\/\/[^\]\s]+|\/[^\]\s]+)\]/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 }
@@ -21,6 +22,7 @@ function renderList(lines) {
 export function renderEditablePage(body) {
     const blocks = [];
     let list = [];
+    let paragraph = [];
 
     function flushList() {
         if (list.length) {
@@ -29,28 +31,46 @@ export function renderEditablePage(body) {
         }
     }
 
-    String(body || "").split(/\n{2,}/).forEach((rawBlock) => {
-        const block = rawBlock.trim();
-        if (!block) return;
-        const lines = block.split(/\n/).map((line) => line.trim()).filter(Boolean);
+    function flushParagraph() {
+        if (paragraph.length) {
+            blocks.push(`<p>${inlineFormat(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
+            paragraph = [];
+        }
+    }
 
-        if (lines.every((line) => /^[-*]\s+/.test(line))) {
-            list.push(...lines);
+    String(body || "").replace(/\r\n/g, "\n").split("\n").forEach((rawLine) => {
+        const line = rawLine.trim();
+        if (!line) {
+            flushParagraph();
             flushList();
             return;
         }
 
-        flushList();
-        if (/^\*[^*\n][\s\S]*[^*\n]\*$/.test(block) && !block.includes("\n")) {
-            blocks.push(`<h2>${inlineFormat(block.slice(1, -1).trim())}</h2>`);
-        } else if (block.startsWith("### ")) {
-            blocks.push(`<h3>${inlineFormat(block.slice(4))}</h3>`);
-        } else if (block.startsWith("## ")) {
-            blocks.push(`<h2>${inlineFormat(block.slice(3))}</h2>`);
+        if (/^[-*]\s+/.test(line)) {
+            flushParagraph();
+            list.push(line);
+        } else if (/^\*[^*].*[^*]\*$/.test(line)) {
+            flushParagraph();
+            flushList();
+            blocks.push(`<h2>${inlineFormat(line.slice(1, -1).trim())}</h2>`);
+        } else if (/^\*\*[^*].*[^*]\*\*$/.test(line)) {
+            flushParagraph();
+            flushList();
+            blocks.push(`<h2>${inlineFormat(line.slice(2, -2).trim())}</h2>`);
+        } else if (line.startsWith("### ")) {
+            flushParagraph();
+            flushList();
+            blocks.push(`<h3>${inlineFormat(line.slice(4))}</h3>`);
+        } else if (line.startsWith("## ")) {
+            flushParagraph();
+            flushList();
+            blocks.push(`<h2>${inlineFormat(line.slice(3))}</h2>`);
         } else {
-            blocks.push(`<p>${inlineFormat(block).replace(/\n/g, "<br>")}</p>`);
+            flushList();
+            paragraph.push(line);
         }
     });
+    flushParagraph();
     flushList();
     return blocks.join("");
 }

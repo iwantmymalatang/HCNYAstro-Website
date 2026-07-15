@@ -1,5 +1,7 @@
 {{ define "main" }}
-<article class="shell single">
+{{ $dynamicSlug := "" }}
+{{ if .File }}{{ $dynamicSlug = .File.TranslationBaseName }}{{ end }}
+<article class="shell single" {{ if or (eq $dynamicSlug "about") (eq $dynamicSlug "repository") }}data-dynamic-page="{{ $dynamicSlug }}" data-supabase-url="{{ .Site.Params.supabaseUrl }}" data-supabase-key="{{ .Site.Params.supabaseAnonKey }}"{{ end }}>
     <header class="single-head">
         <a class="back-link" href="{{ .Site.Home.RelPermalink }}">← Back</a>
         <h1>{{ .Title }}</h1>
@@ -9,4 +11,12 @@
         {{ .Content }}
     </div>
 </article>
+{{ end }}
+
+{{ define "scripts" }}
+    {{ $dynamicSlug := "" }}
+    {{ if .File }}{{ $dynamicSlug = .File.TranslationBaseName }}{{ end }}
+    {{ if or (eq $dynamicSlug "about") (eq $dynamicSlug "repository") }}
+        <script type="module" src="{{ "js/dynamic-pages.js" | relURL }}?v={{ now.Unix }}"></script>
+    {{ end }}
 {{ end }}

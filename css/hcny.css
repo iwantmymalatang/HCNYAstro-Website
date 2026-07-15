@@ -955,6 +955,25 @@ h1 {
     font-size: 0.92rem;
 }
 
+.admin-glow-name {
+    color: #ffffff;
+    font-weight: 900;
+    text-shadow:
+        0 0 8px rgba(180, 170, 255, 0.95),
+        0 0 18px rgba(104, 81, 255, 0.72),
+        0 0 30px rgba(71, 122, 255, 0.48);
+}
+
+.admin-glow-name::after {
+    content: " ADMIN";
+    margin-left: 6px;
+    color: #d8d4ff;
+    font-size: 0.68em;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    vertical-align: 0.08em;
+}
+
 .admin-metrics {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -985,6 +1004,96 @@ h1 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
+}
+
+.page-editor-panel {
+    min-height: auto;
+}
+
+.page-editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: end;
+}
+
+.page-editor-toolbar label,
+.page-editor-title,
+.page-editor-body {
+    display: grid;
+    gap: 7px;
+}
+
+.page-editor-toolbar label {
+    flex: 1;
+}
+
+.page-editor-toolbar span,
+.page-editor-title span,
+.page-editor-body span {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.page-editor-panel input,
+.page-editor-panel select,
+.page-editor-panel textarea {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 14px;
+    background: #121421;
+    color: #ffffff;
+    font: inherit;
+    padding: 12px 13px;
+}
+
+.page-editor-toolbar button {
+    min-height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    background: #ffffff;
+    color: #05060b;
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+    padding: 0 16px;
+}
+
+.page-editor-toolbar button:disabled {
+    opacity: 0.58;
+    cursor: wait;
+}
+
+.page-editor-panel textarea {
+    min-height: 360px;
+    resize: vertical;
+    line-height: 1.55;
+}
+
+.page-editor-help {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.page-editor-help span {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.page-editor-preview {
+    max-width: none;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
+    background: #0e101b;
+    padding: 16px;
 }
 
 .admin-panel {

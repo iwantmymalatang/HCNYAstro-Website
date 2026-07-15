@@ -48,6 +48,37 @@
             </article>
         </section>
 
+        <section class="admin-panel page-editor-panel">
+            <div class="admin-panel-head">
+                <h2>Page editor</h2>
+                <span id="page-editor-status">About and Repository</span>
+            </div>
+            <div class="page-editor-toolbar">
+                <label>
+                    <span>Page</span>
+                    <select id="page-editor-slug">
+                        <option value="about">About</option>
+                        <option value="repository">Repository</option>
+                    </select>
+                </label>
+                <button type="button" id="page-editor-save">Save page</button>
+            </div>
+            <label class="page-editor-title">
+                <span>Title</span>
+                <input id="page-editor-title" type="text" autocomplete="off">
+            </label>
+            <label class="page-editor-body">
+                <span>Content</span>
+                <textarea id="page-editor-body" rows="16" spellcheck="true" placeholder="Use *Heading* for headings and [Text][https://link] for links."></textarea>
+            </label>
+            <div class="page-editor-help">
+                <span>*Heading*</span>
+                <span>[Text][https://link]</span>
+                <span>[Text](https://link)</span>
+            </div>
+            <div class="single-content page-editor-preview" id="page-editor-preview"></div>
+        </section>
+
         <div class="admin-dashboard-grid">
             <section class="admin-panel">
                 <div class="admin-panel-head">

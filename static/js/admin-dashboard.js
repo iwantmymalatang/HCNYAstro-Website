@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeHtml, renderEditablePage } from "./page-format.js";
 
 const mount = document.getElementById("admin-dashboard");
 const client = mount?.dataset.supabaseUrl && mount?.dataset.supabaseKey
@@ -28,6 +29,14 @@ const els = {
     users: document.getElementById("admin-users"),
     posts: document.getElementById("admin-posts"),
     comments: document.getElementById("admin-comments"),
+    pageEditor: {
+        slug: document.getElementById("page-editor-slug"),
+        title: document.getElementById("page-editor-title"),
+        body: document.getElementById("page-editor-body"),
+        save: document.getElementById("page-editor-save"),
+        status: document.getElementById("page-editor-status"),
+        preview: document.getElementById("page-editor-preview"),
+    },
 };
 
 const state = {
@@ -35,14 +44,56 @@ const state = {
     profile: null,
 };
 
-function escapeHtml(value) {
-    return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+const pageFallbacks = {
+    about: {
+        title: "About",
+        body: `HCNYAstro is an astronomy interest group from Hwa Chong Institution (High School) and Nanyang Girls' High School.
+
+We collect resources for students to learn more about astronomy, organise events such as stargazing to give students a chance at practical experiences, and other lessons.
+
+The interest group has a long history going far back, even before the 2020s. Originally, it started as a small, informal interest group that emerged from the pure love of astronomy, with a few people hosting sessions where HCIHS students would go over to the JC Astro club and sit in on their lessons.
+
+HCNYAstro was founded in its current form in 2021 when the HS Astronomy interest group expanded to encompass NYGH as well, under the guidance of our senior Tey Yi Fan (graduated 2022). From there, it grew into its own independent interest group, organising its own online lessons, practical sessions, and even collaborating with other schools.
+
+We hope that in the years to come, the interest group will continue to spark a love for astronomy in many more generations of young astronomers, from HCI, NYGH, and the rest of Singapore.
+
+*Our current EXCO line-up*
+
+- Wang Xingshuo, HCI
+- Ng Chyng Yi, NYGH
+- Nay Myo Win, HCI
+- Teh Jiaying, NYGH
+- Loke Kei Nga Tricia, NYGH
+- Zhao Wenying, NYGH
+- Liu Haochen, HCI`,
+    },
+    repository: {
+        title: "Repository",
+        body: `*Resources*
+
+[AOGuide][https://www.aoguide.app/] contains the core astronomy olympiad content you will need. It is strongest as a reference, so use the handouts and practice materials alongside it for olympiad technique.
+
+*Handouts*
+
+To be added soon
+
+[Handout explanation videos][https://www.aoguide.app/] are December 2026 training resources prepared for HCNY Astronomy contributors.
+
+*Lesson slides and materials*
+
+Open the [lesson slides and materials][https://drive.google.com/drive/folders/11fzTbXRS3pTrSB5io9DIzJJqmk0Y2_7j?usp=drive_link] folder for class slides, worksheets, and extra lesson materials.
+
+- [HCNYAstro Session 1][https://docs.google.com/presentation/d/1e_t3ULCi6ijZcE73-1k4_UN_SuuyT6LzJFOwCDd2g6w/edit?usp=drive_web]
+- [HCNYAstro Session 2][https://docs.google.com/presentation/d/1EQnfo_FA1UNS9HjMl3rysR4F2O2CLL7aeagkw5tSFJk/edit?usp=drive_web]
+- [COM Session 1: Centre of Mass][https://docs.google.com/presentation/d/1-H0OFl6gO9_XGZTgzlqLa2xzynD_i77Za2AZCmOXi8A/edit?usp=drive_web]
+- [HCNY Session 4][https://docs.google.com/presentation/d/1a6HJCLElkrimyBBRKaw137ZyUyIcqiqjYCs63K6pugY/edit?usp=drive_web]
+- [HCNY Session 4 Final Version][https://docs.google.com/presentation/d/1quKnZl74dr9tznAyepwtp6qVe0Wy4-aqSFX4Tebm7vU/edit?usp=drive_web]
+- [Prerequisite Mechanics for HCNY Astro][https://docs.google.com/presentation/d/1xRxJJrZyTPVHY0u0ooZTqfCkak07_Gh5x09r2G0KVdc/edit?usp=drive_web]
+- [Prerequisite Mechanics (Simplified)][https://docs.google.com/presentation/d/1LuJcgeLFQJcY9OkRdGHtIA0fzLMhQrjopXqw_j6xmOY/edit?usp=drive_web]
+- [Celestial Mechanics (All)][https://docs.google.com/presentation/d/1TAZdBWjSx2xzm0sYXhiR6xviq3uIiOBW1lq_L1ZDJ58/edit?usp=drive_web]
+- [Relativity][https://docs.google.com/presentation/d/1MHSKJTDXFXbXp9K7FLfAExN6C33r7FoM3p_XNV2SFFU/edit?usp=drive_web]`,
+    },
+};
 
 function formatDate(value) {
     const date = new Date(value);
@@ -168,6 +219,66 @@ function renderComments(comments) {
     `).join("") : empty("No comments yet.");
 }
 
+function updatePagePreview() {
+    els.pageEditor.preview.innerHTML = renderEditablePage(els.pageEditor.body.value);
+}
+
+function setPageEditorStatus(message) {
+    els.pageEditor.status.textContent = message || "";
+}
+
+async function loadEditablePage() {
+    const slug = els.pageEditor.slug.value;
+    setPageEditorStatus("Loading...");
+    const fallback = pageFallbacks[slug] || { title: slug, body: "" };
+
+    const { data, error } = await client
+        .from("content_pages")
+        .select("slug,title,body,updated_at")
+        .eq("slug", slug)
+        .maybeSingle();
+
+    if (error) {
+        els.pageEditor.title.value = fallback.title;
+        els.pageEditor.body.value = fallback.body;
+        updatePagePreview();
+        setPageEditorStatus("Run supabase-dynamic-pages.sql to enable saving.");
+        return;
+    }
+
+    els.pageEditor.title.value = data?.title || fallback.title;
+    els.pageEditor.body.value = data?.body || fallback.body;
+    updatePagePreview();
+    setPageEditorStatus(data?.updated_at ? `Loaded ${formatDate(data.updated_at)}` : "Loaded fallback draft");
+}
+
+async function saveEditablePage() {
+    const slug = els.pageEditor.slug.value;
+    const title = els.pageEditor.title.value.trim() || (pageFallbacks[slug]?.title || slug);
+    const body = els.pageEditor.body.value.trim();
+    if (!body) {
+        setPageEditorStatus("Content cannot be empty.");
+        return;
+    }
+
+    els.pageEditor.save.disabled = true;
+    setPageEditorStatus("Saving...");
+    const { error } = await client.from("content_pages").upsert({
+        slug,
+        title,
+        body,
+        updated_by: state.session.user.id,
+        updated_at: new Date().toISOString(),
+    }, { onConflict: "slug" });
+
+    els.pageEditor.save.disabled = false;
+    if (error) {
+        setPageEditorStatus(error.message || "Could not save page.");
+        return;
+    }
+    setPageEditorStatus("Saved. Refresh the public page to see it.");
+}
+
 async function loadDashboard() {
     els.body.classList.add("is-loading");
     try {
@@ -198,6 +309,7 @@ async function loadDashboard() {
         renderUsers(usersResult.data || []);
         renderPosts(postsResult.data || []);
         renderComments(commentsResult.data || []);
+        await loadEditablePage();
     } catch (error) {
         setGate(error.message || "Could not load admin dashboard.");
     } finally {
@@ -243,6 +355,10 @@ async function init() {
     els.email.textContent = state.profile?.email || state.session.user.email || "";
 
     els.refresh.addEventListener("click", loadDashboard);
+    els.pageEditor.slug.addEventListener("change", loadEditablePage);
+    els.pageEditor.body.addEventListener("input", updatePagePreview);
+    els.pageEditor.title.addEventListener("input", updatePagePreview);
+    els.pageEditor.save.addEventListener("click", saveEditablePage);
     els.logout.addEventListener("click", async () => {
         await client.auth.signOut();
         window.location.href = "../admin/";

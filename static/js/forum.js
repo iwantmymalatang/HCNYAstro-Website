@@ -138,6 +138,16 @@ function displayName() {
     return state.profile?.username || state.session?.user?.email?.split("@")[0] || "Contributor";
 }
 
+function isAdminName(name) {
+    const normalized = String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+    return normalized === "hcnyastro" || normalized.includes("hcnyastroadmin") || normalized.includes("admin");
+}
+
+function renderUsername(name) {
+    const safeName = escapeHtml(name || "Contributor");
+    return isAdminName(name) ? `<span class="admin-glow-name">${safeName}</span>` : safeName;
+}
+
 function resetCompose() {
     els.compose.reset();
     els.editId.value = "";
@@ -225,7 +235,7 @@ async function renderAccount() {
 
     els.account.innerHTML = `
         <button type="button" id="forum-new-post">New post</button>
-        <span>${escapeHtml(displayName())}</span>
+        <span>${renderUsername(displayName())}</span>
         ${isAdmin() ? '<strong>Admin</strong>' : '<strong>Contributor</strong>'}
         ${isAdmin() ? '<a class="read-link" href="../admin-dashboard/">Dashboard</a>' : ""}
         ${isAdmin() ? '<button type="button" id="forum-reports">Reports</button>' : ""}
@@ -306,7 +316,7 @@ function renderThreadList() {
                 ${renderTags(thread.tags)}
                 ${renderPostImage(thread.image_url, thread.title)}
                 <p>${escapeHtml(thread.body).slice(0, 220)}${thread.body?.length > 220 ? "..." : ""}</p>
-                <span class="forum-meta">By ${escapeHtml(thread.username || "Contributor")} · ${thread.comment_count || 0} comments</span>
+                <span class="forum-meta">By ${renderUsername(thread.username || "Contributor")} · ${thread.comment_count || 0} comments</span>
             </div>
             <button class="read-link" type="button" data-open-thread="${thread.id}">Open</button>
         </article>
@@ -399,7 +409,7 @@ async function renderSelectedThread() {
             <time>${formatDate(thread.created_at)}</time>
             <h1>${escapeHtml(thread.title)}</h1>
             ${renderTags(thread.tags)}
-            <p class="forum-meta">By ${escapeHtml(thread.username || "Contributor")}</p>
+            <p class="forum-meta">By ${renderUsername(thread.username || "Contributor")}</p>
             <div class="admin-post-actions">${actions}${reportThreadAction}</div>
         </header>
         <div class="single-content">${renderBody(thread.body)}</div>
@@ -461,7 +471,7 @@ function renderComment(comment, groups, depth) {
                     <button type="button" data-vote-comment="${comment.id}" data-vote-value="-1">▼</button>
                 </div>
                 <div>
-                    <div class="forum-meta">${escapeHtml(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
+                    <div class="forum-meta">${renderUsername(comment.username || "Contributor")} · ${formatDate(comment.created_at)}</div>
                     <p>${escapeHtml(comment.body)}</p>
                     <div class="admin-post-actions">${actions}</div>
                     ${replyForm}
@@ -633,7 +643,7 @@ function renderReport(report) {
         <article class="comment report-card">
             <div></div>
             <div>
-                <div class="forum-meta">${target} report · ${escapeHtml(report.username || "Contributor")} · ${formatDate(report.created_at)}</div>
+                <div class="forum-meta">${target} report · ${renderUsername(report.username || "Contributor")} · ${formatDate(report.created_at)}</div>
                 <p>${escapeHtml(report.reason)}</p>
                 <div class="admin-post-actions">
                     ${report.thread_id ? `<button type="button" data-open-report-thread="${report.thread_id}">Open post</button>` : ""}

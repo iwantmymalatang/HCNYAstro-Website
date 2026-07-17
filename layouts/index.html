@@ -33,5 +33,5 @@
 {{ end }}
 
 {{ define "scripts" }}
-<script src="{{ "js/orbit.js" | relURL }}"></script>
+<script src="{{ "js/orbit.js" | relURL }}?v={{ now.Unix }}"></script>
 {{ end }}

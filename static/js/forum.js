@@ -81,6 +81,9 @@ function renderTags(tags) {
 function inlineMarkdown(value) {
     return escapeHtml(value)
         .replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '<img class="inline-post-image" src="$2" alt="$1" loading="lazy">')
+        .replace(/\[([^\]]+?)\]\[\s*(https?:\/\/[^\]\s]+|\/[^\]\s]+)\s*\]/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/\[([^\[\]]+?)\s*\[\s*(https?:\/\/[^\]\s]+|\/[^\]\s]+)\s*\]\]/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/\[([^\[\]]+?)\s*\[\s*(https?:\/\/[^\]\s]+|\/[^\]\s]+)\s*\]/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 }

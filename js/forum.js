@@ -41,6 +41,8 @@ const els = {
     title: document.getElementById("forum-title"),
     tags: document.getElementById("forum-tags"),
     body: document.getElementById("forum-body"),
+    inlineImageButton: document.getElementById("forum-inline-image-button"),
+    inlineImages: document.getElementById("forum-inline-images"),
     image: document.getElementById("forum-image"),
     imageUrl: document.getElementById("forum-image-url"),
     imagePreview: document.getElementById("forum-image-preview"),
@@ -78,8 +80,21 @@ function renderTags(tags) {
 
 function inlineMarkdown(value) {
     return escapeHtml(value)
+        .replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '<img class="inline-post-image" src="$2" alt="$1" loading="lazy">')
         .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+function imageFigure(markdownImage) {
+    const match = markdownImage.match(/^!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)$/);
+    if (!match) return "";
+    const [, alt, url] = match;
+    return `
+        <figure class="forum-post-image">
+            <img src="${escapeHtml(url)}" alt="${escapeHtml(alt || "Forum post image")}" loading="lazy">
+            ${alt ? `<figcaption>${escapeHtml(alt)}</figcaption>` : ""}
+        </figure>
+    `;
 }
 
 function renderBody(markdown) {
@@ -90,6 +105,7 @@ function renderBody(markdown) {
         .map((block) => {
             if (block.startsWith("### ")) return `<h3>${inlineMarkdown(block.slice(4))}</h3>`;
             if (block.startsWith("## ")) return `<h2>${inlineMarkdown(block.slice(3))}</h2>`;
+            if (/^!\[[^\]]*\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)$/.test(block)) return imageFigure(block);
             return `<p>${inlineMarkdown(block).replace(/\n/g, "<br>")}</p>`;
         })
         .join("");
@@ -1067,6 +1083,44 @@ async function uploadForumImage(file, title) {
     return data.publicUrl;
 }
 
+function insertAtCursor(textarea, value) {
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? textarea.value.length;
+    const before = textarea.value.slice(0, start);
+    const after = textarea.value.slice(end);
+    const prefix = before && !before.endsWith("\n") ? "\n\n" : "";
+    const suffix = after && !after.startsWith("\n") ? "\n\n" : "";
+    textarea.value = `${before}${prefix}${value}${suffix}${after}`;
+    const nextPosition = before.length + prefix.length + value.length;
+    textarea.focus();
+    textarea.setSelectionRange(nextPosition, nextPosition);
+}
+
+async function insertInlineImages() {
+    const files = Array.from(els.inlineImages.files || []);
+    if (!files.length) return;
+    if (!state.session?.user?.id) {
+        els.composeStatus.textContent = "Sign in before adding images.";
+        return;
+    }
+    els.composeStatus.textContent = files.length === 1 ? "Uploading inline PNG..." : `Uploading ${files.length} inline PNGs...`;
+    try {
+        const snippets = [];
+        for (const file of files) {
+            if (file.type !== "image/png") throw new Error("Please choose PNG images only.");
+            const url = await uploadForumImage(file, els.title.value.trim() || file.name);
+            const alt = file.name.replace(/\.png$/i, "").replace(/[-_]+/g, " ").trim() || "Forum image";
+            snippets.push(`![${alt}](${url})`);
+        }
+        insertAtCursor(els.body, snippets.join("\n\n"));
+        els.composeStatus.textContent = files.length === 1 ? "Image inserted into content." : "Images inserted into content.";
+    } catch (error) {
+        els.composeStatus.textContent = error.message;
+    } finally {
+        els.inlineImages.value = "";
+    }
+}
+
 async function submitSettings(event) {
     event.preventDefault();
     const wasFirstSetup = els.settingsPanel.dataset.forceSettings === "true";
@@ -1148,6 +1202,8 @@ async function init() {
         });
     });
     els.compose.addEventListener("submit", submitThread);
+    els.inlineImageButton.addEventListener("click", () => els.inlineImages.click());
+    els.inlineImages.addEventListener("change", insertInlineImages);
     els.image.addEventListener("change", () => {
         const file = els.image.files?.[0];
         if (!file) {

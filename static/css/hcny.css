@@ -3362,6 +3362,7 @@ body {
     }
 
 }
+[data-dynamic-page="about"] .single-content h2,
 [data-dynamic-page="repository"] .single-content h2 {
     padding-top: 0;
     border-top: 0;

@@ -150,6 +150,7 @@ function renderBody(markdown) {
         .map((block) => {
             if (block.startsWith("### ")) return `<h3>${inlineMarkdown(block.slice(4))}</h3>`;
             if (block.startsWith("## ")) return `<h2>${inlineMarkdown(block.slice(3))}</h2>`;
+            if (/^\*[^*\n].*[^*\n]\*$/.test(block)) return `<h2>${inlineMarkdown(block.slice(1, -1).trim())}</h2>`;
             if (/^!\[[^\]]*\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)$/.test(block)) return imageFigure(block);
             if (isMarkdownTable(block)) return renderMarkdownTable(block);
             return `<p>${inlineMarkdown(block).replace(/\n/g, "<br>")}</p>`;

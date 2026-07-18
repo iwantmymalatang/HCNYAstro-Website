@@ -142,18 +142,56 @@ function renderMarkdownTable(block) {
     `;
 }
 
+function isAsteriskHeading(line) {
+    return /^\*\s*[^*\n]+?\s*\*$/.test(line);
+}
+
+function renderTextBlock(block) {
+    const parts = [];
+    let paragraph = [];
+
+    function flushParagraph() {
+        if (!paragraph.length) return;
+        parts.push(`<p>${inlineMarkdown(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
+        paragraph = [];
+    }
+
+    block.split("\n").forEach((rawLine) => {
+        const line = rawLine.trim();
+        if (!line) {
+            flushParagraph();
+            return;
+        }
+        if (line.startsWith("### ")) {
+            flushParagraph();
+            parts.push(`<h3>${inlineMarkdown(line.slice(4))}</h3>`);
+            return;
+        }
+        if (line.startsWith("## ")) {
+            flushParagraph();
+            parts.push(`<h2>${inlineMarkdown(line.slice(3))}</h2>`);
+            return;
+        }
+        if (isAsteriskHeading(line)) {
+            flushParagraph();
+            parts.push(`<h2>${inlineMarkdown(line.slice(1, -1).trim())}</h2>`);
+            return;
+        }
+        paragraph.push(line);
+    });
+    flushParagraph();
+    return parts.join("");
+}
+
 function renderBody(markdown) {
     return String(markdown || "")
         .split(/\n{2,}/)
         .map((block) => block.trim())
         .filter(Boolean)
         .map((block) => {
-            if (block.startsWith("### ")) return `<h3>${inlineMarkdown(block.slice(4))}</h3>`;
-            if (block.startsWith("## ")) return `<h2>${inlineMarkdown(block.slice(3))}</h2>`;
-            if (/^\*[^*\n].*[^*\n]\*$/.test(block)) return `<h2>${inlineMarkdown(block.slice(1, -1).trim())}</h2>`;
             if (/^!\[[^\]]*\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)$/.test(block)) return imageFigure(block);
             if (isMarkdownTable(block)) return renderMarkdownTable(block);
-            return `<p>${inlineMarkdown(block).replace(/\n/g, "<br>")}</p>`;
+            return renderTextBlock(block);
         })
         .join("");
 }

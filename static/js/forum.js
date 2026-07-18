@@ -97,6 +97,51 @@ function imageFigure(markdownImage) {
     `;
 }
 
+function isMarkdownTable(block) {
+    const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+    return lines.length >= 2
+        && lines[0].includes("|")
+        && /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(lines[1]);
+}
+
+function splitTableRow(line) {
+    const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+    const cells = [];
+    let current = "";
+    let escaping = false;
+    for (const char of trimmed) {
+        if (escaping) {
+            current += char;
+            escaping = false;
+        } else if (char === "\\") {
+            escaping = true;
+        } else if (char === "|") {
+            cells.push(current.trim());
+            current = "";
+        } else {
+            current += char;
+        }
+    }
+    cells.push(current.trim());
+    return cells;
+}
+
+function renderMarkdownTable(block) {
+    const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+    const headers = splitTableRow(lines[0]);
+    const rows = lines.slice(2).map(splitTableRow);
+    return `
+        <div class="forum-table-wrap">
+            <table class="forum-table">
+                <thead><tr>${headers.map((cell) => `<th>${inlineMarkdown(cell)}</th>`).join("")}</tr></thead>
+                <tbody>
+                    ${rows.map((row) => `<tr>${headers.map((_, index) => `<td>${inlineMarkdown(row[index] || "")}</td>`).join("")}</tr>`).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
 function renderBody(markdown) {
     return String(markdown || "")
         .split(/\n{2,}/)
@@ -106,6 +151,7 @@ function renderBody(markdown) {
             if (block.startsWith("### ")) return `<h3>${inlineMarkdown(block.slice(4))}</h3>`;
             if (block.startsWith("## ")) return `<h2>${inlineMarkdown(block.slice(3))}</h2>`;
             if (/^!\[[^\]]*\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)$/.test(block)) return imageFigure(block);
+            if (isMarkdownTable(block)) return renderMarkdownTable(block);
             return `<p>${inlineMarkdown(block).replace(/\n/g, "<br>")}</p>`;
         })
         .join("");
@@ -1096,6 +1142,51 @@ function insertAtCursor(textarea, value) {
     textarea.setSelectionRange(nextPosition, nextPosition);
 }
 
+function cleanTableCell(value) {
+    return String(value || "").replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
+}
+
+function rowsToMarkdownTable(rows) {
+    const cleaned = rows
+        .map((row) => row.map(cleanTableCell))
+        .filter((row) => row.some(Boolean));
+    if (!cleaned.length) return "";
+    const width = Math.max(...cleaned.map((row) => row.length));
+    const normalized = cleaned.map((row) => Array.from({ length: width }, (_, index) => row[index] || ""));
+    const header = normalized[0];
+    const separator = Array.from({ length: width }, () => "---");
+    const body = normalized.slice(1);
+    return [header, separator, ...body]
+        .map((row) => `| ${row.join(" | ")} |`)
+        .join("\n");
+}
+
+function tableFromHtml(html) {
+    if (!html || !html.includes("<table")) return "";
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const table = doc.querySelector("table");
+    if (!table) return "";
+    const rows = Array.from(table.querySelectorAll("tr")).map((row) =>
+        Array.from(row.querySelectorAll("th,td")).map((cell) => cell.textContent)
+    );
+    return rowsToMarkdownTable(rows);
+}
+
+function tableFromPlainText(text) {
+    const lines = String(text || "").trim().split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2 || !lines.some((line) => line.includes("\t"))) return "";
+    return rowsToMarkdownTable(lines.map((line) => line.split("\t")));
+}
+
+function handleBodyPaste(event) {
+    const markdownTable = tableFromHtml(event.clipboardData?.getData("text/html"))
+        || tableFromPlainText(event.clipboardData?.getData("text/plain"));
+    if (!markdownTable) return;
+    event.preventDefault();
+    insertAtCursor(els.body, markdownTable);
+    els.composeStatus.textContent = "Table inserted into content.";
+}
+
 async function insertInlineImages() {
     const files = Array.from(els.inlineImages.files || []);
     if (!files.length) return;
@@ -1202,6 +1293,7 @@ async function init() {
         });
     });
     els.compose.addEventListener("submit", submitThread);
+    els.body.addEventListener("paste", handleBodyPaste);
     els.inlineImageButton.addEventListener("click", () => els.inlineImages.click());
     els.inlineImages.addEventListener("change", insertInlineImages);
     els.image.addEventListener("change", () => {

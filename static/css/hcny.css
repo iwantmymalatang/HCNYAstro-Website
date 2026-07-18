@@ -580,6 +580,50 @@ h1 {
     border-left: 2px solid rgba(143, 140, 255, 0.45);
 }
 
+.forum-table-wrap {
+    max-width: 100%;
+    margin: 14px 0 22px;
+    overflow-x: auto;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    background: #090a13;
+}
+
+.forum-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    color: var(--text);
+}
+
+.forum-table th,
+.forum-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: left;
+    vertical-align: top;
+}
+
+.forum-table th:last-child,
+.forum-table td:last-child {
+    border-right: 0;
+}
+
+.forum-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.forum-table th {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    font-weight: 850;
+}
+
+.forum-table td {
+    color: var(--muted);
+}
+
 .admin-head {
     min-height: auto;
 }

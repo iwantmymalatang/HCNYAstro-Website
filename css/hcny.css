@@ -524,7 +524,6 @@ h1 {
 .single-content h2 {
     margin: 34px 0 12px;
     padding-top: 20px;
-    border-top: 1px solid var(--line);
     color: #ffffff;
     font-size: clamp(1.45rem, 3vw, 2.1rem);
     line-height: 1.15;
@@ -2487,7 +2486,6 @@ h1,
 }
 
 .single-content h2 {
-    border-top-color: var(--line);
     color: var(--text);
 }
 
